@@ -1,0 +1,79 @@
+
+//  0000000  000000000  000   000  000    
+// 000          000      000 000   000    
+// 0000000      000       00000    000    
+//      000     000        000     000    
+// 0000000      000        000     0000000
+
+font = "Avenir", "Varela Round", "Verdana"
+
+fill-abs()
+    position            absolute
+    bottom              0
+    right               0
+    left                0
+    top                 0
+
+// 0000000     0000000   0000000    000   000
+// 000   000  000   000  000   000   000 000 
+// 0000000    000   000  000   000    00000  
+// 000   000  000   000  000   000     000   
+// 0000000     0000000   0000000       000   
+
+*
+    outline-width       0
+    
+body
+    fill-abs()
+    margin              0
+    overflow            hidden
+    font-family         font
+    font-size           16px
+    -webkit-user-select none
+    -webkit-app-region  drag
+
+// 00     00   0000000   000  000   000  
+// 000   000  000   000  000  0000  000  
+// 000000000  000000000  000  000 0 000  
+// 000 0 000  000   000  000  000  0000  
+// 000   000  000   000  000  000   000  
+
+.main
+    fill-abs()
+    overflow            hidden
+    pointer-events      auto
+    -webkit-user-select text
+
+.current
+    z-index             1
+            
+// 000   0000000   0000000   000   000  
+// 000  000       000   000  0000  000  
+// 000  000       000   000  000 0 000  
+// 000  000       000   000  000  0000  
+// 000   0000000   0000000   000   000  
+
+.app
+    fill-abs()
+    
+.appicon
+    position            absolute
+    margin              0
+    top                 10%
+    left                10%
+    width               80%
+    height              80%
+    background-size     100% 100%
+    cursor              pointer
+
+.appname
+    text-align          center
+    position            absolute
+    padding-top         2%
+    top                 92%
+    left                0
+    right               0
+    bottom              0
+
+        
+    

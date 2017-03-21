@@ -1,0 +1,34 @@
+name            kappo
+productName     kappo
+version         0.1.0
+description     application opener
+main            js/main.js
+repository
+                type  git
+                url   git+https://github.com/monsterkodi/kappo.git
+keywords
+                mac
+                application
+                opener
+                menu-bar
+                electron
+author          monsterkodi
+license         Unlicense
+bugs
+                url  https://github.com/monsterkodi/kappo/issues
+dependencies
+                fs-extra        ^2.1.2
+                fuzzy           ^0.1.3
+                html-entities   ^1.2.0
+                keycode         ^2.1.8
+                lodash          ^4.17.4
+                noon            >=1.0.14
+                opener          ^1.4.3
+                simple-plist    ^0.2.1
+                walkdir         ^0.0.11
+                write-file-atomic  ^1.3.1
+devDependencies
+                appdmg          ^0.4.5
+                electron        ^1.6.2
+                electron-packager  ^8.5.2
+                electron-rebuild  ^1.5.7

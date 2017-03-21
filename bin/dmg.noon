@@ -1,0 +1,18 @@
+title  kappo
+icon   ../img/kappo.icns
+background  ../img/dmg.png
+window
+    position
+        x   200
+        y   600
+contents
+    .
+        x   100
+        y   180
+        type  link 
+        path  /Applications
+    .
+        x   100
+        y   70
+        type  file 
+        path  ../kappo-darwin-x64/kappo.app
