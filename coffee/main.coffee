@@ -61,7 +61,7 @@ activateApp = ->
 
 toggleWindow = ->
     if win?.isVisible()
-        win.hide()        
+        activateApp()   
     else
         showWindow()
 
@@ -179,6 +179,6 @@ app.on 'ready', ->
         
     prefs.init "#{app.getPath('userData')}/#{pkg.productName}.noon", shortcut: 'F1'
 
-    electron.globalShortcut.register prefs.get('shortcut'), showWindow
+    electron.globalShortcut.register prefs.get('shortcut'), toggleWindow
 
     
