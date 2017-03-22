@@ -83,3 +83,11 @@ module.exports =
         document.styleSheets[ssid].insertRule "#{selector} { #{key}: #{value} }", document.styleSheets[ssid].cssRules.length
 
     childIndex: (e) -> Array.prototype.indexOf.call(e.parentNode.childNodes, e)
+    
+    #  0000000   0000000  00000000   000  00000000   000000000  
+    # 000       000       000   000  000  000   000     000     
+    # 0000000   000       0000000    000  00000000      000     
+    #      000  000       000   000  000  000           000     
+    # 0000000    0000000  000   000  000  000           000     
+    
+    osascript: (script) -> ( "-e \"#{l.replace(/\"/g, "\\\"")}\"" for l in script.split("\n") ).join(" ")

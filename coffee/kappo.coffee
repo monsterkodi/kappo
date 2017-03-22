@@ -14,6 +14,7 @@ sw,
 $}          = require './tools/tools'
 appIcon     = require './tools/appicon'
 keyinfo     = require './tools/keyinfo'
+history     = require './tools/history'
 prefs       = require './tools/prefs'
 elem        = require './tools/elem'
 log         = require './tools/log'
@@ -35,6 +36,7 @@ fuzzied     = []
 apps        = {}
 search      = ''
 currentApp  = ''
+appHist     = new history
 current     = 0
 
 # 000   000  000  000   000  00     00   0000000   000  000   000  
@@ -48,6 +50,7 @@ winMain = () ->
     window.win = win
 
     ipc.on 'clearSearch', clearSearch
+    ipc.on 'currentApp',  currentApp
 
     iconDir = resolve "#{__dirname}/../icons"
     fs.ensureDirSync iconDir
@@ -82,14 +85,44 @@ findApps = ->
             if path.extname(dir) == '.app'
                 name = path.basename dir, '.app'
                 apps[name] = dir 
-   
+
+#  0000000  000   000  00000000   00000000   00000000  000   000  000000000  
+# 000       000   000  000   000  000   000  000       0000  000     000     
+# 000       000   000  0000000    0000000    0000000   000 0 000     000     
+# 000       000   000  000   000  000   000  000       000  0000     000     
+#  0000000   0000000   000   000  000   000  00000000  000   000     000     
+
+currentApp = (e, appName) ->
+    if currentApp == appName and appHist.previous()
+        doSearch appHist.previous()
+    clearSearch()
+
+#  0000000  000      00000000   0000000   00000000   
+# 000       000      000       000   000  000   000  
+# 000       000      0000000   000000000  0000000    
+# 000       000      000       000   000  000   000  
+#  0000000  0000000  00000000  000   000  000   000  
+
+clearSearch = ->
+    if fuzzied.length
+        search = ''
+        fuzzied = [fuzzied[Math.min current, fuzzied.length-1]]
+        fuzzied[0].string = currentApp
+        $('appname').innerHTML = currentApp
+        current = 0
+        showDots()
+    else
+        doSearch ''
+    win.show()
+
 #  0000000   00000000   00000000  000   000  
 # 000   000  000   000  000       0000  000  
 # 000   000  00000000   0000000   000 0 000  
 # 000   000  000        000       000  0000  
 #  0000000   000        00000000  000   000  
- 
+
 openCurrent = -> 
+    appHist.add currentApp
     childp.exec "open -a \"#{apps[currentApp]}\"", (err) -> 
         if err?
             log "[ERROR] can't open #{apps[currentApp]}"
@@ -181,17 +214,7 @@ complete  = (key) -> doSearch search + key
 backspace =       -> doSearch search.substr 0, search.length-1
 
 cancelSearchOrClose = -> if search.length then doSearch '' else ipc.send 'cancel'
-clearSearch = ->
-    if fuzzied.length
-        search = ''
-        fuzzied = [fuzzied[Math.min current, fuzzied.length-1]]
-        fuzzied[0].string = currentApp
-        $('appname').innerHTML = currentApp
-        current = 0
-        showDots()
-    else
-        doSearch ''
-        
+
 window.onclick  = -> openCurrent()
 window.onunload = -> document.onkeydown = null    
 window.onblur   = -> win.hide()

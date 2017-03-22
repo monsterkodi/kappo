@@ -13,16 +13,22 @@ log       = require './log'
 
 class AppIcon
     
+    @cache = {}
+    
     @pngPath: (opt) ->
         resolve path.join opt.iconDir, path.basename(opt.appPath, path.extname(opt.appPath)) + ".png"
 
     @get: (opt) ->
         pngPath = AppIcon.pngPath opt
-        fs.stat pngPath, (err, stat) ->
-            if not err? and stat.isFile()
-                opt.cb pngPath, opt.cbArg
-            else
-                AppIcon.getIcon opt
+        if AppIcon.cache[pngPath]
+            opt.cb pngPath, opt.cbArg
+        else
+            fs.stat pngPath, (err, stat) ->
+                if not err? and stat.isFile()
+                    AppIcon.cache[pngPath] = true
+                    opt.cb pngPath, opt.cbArg
+                else
+                    AppIcon.getIcon opt
          
     @getIcon: (opt) ->
         appPath = opt.appPath

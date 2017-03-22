@@ -37,7 +37,7 @@ after first lauch of **kappo**.
 
 It uses [fuzzy](https://www.npmjs.com/package/fuzzy) to search for matches and [fuzzaldrin](https://www.npmjs.com/package/fuzzaldrin) to sort them.
 
-Application handling is done via the excellent [appswitch](https://github.com/nriley/appswitch) tool.
+Application handling is done via the [appswitch](https://github.com/nriley/appswitch) tool.
 
 # why
 
