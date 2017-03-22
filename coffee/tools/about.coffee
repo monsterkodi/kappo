@@ -32,49 +32,51 @@ class About
             maximizable:     false
             webPreferences:
                 webSecurity: false
-            width:           400
-            height:          400
+            width:           opt?.size ? 400
+            height:          opt?.size ? 400
 
         version = opt.version ? pkg.version
         html = """
             <style type="text/css">
-                
+                body {
+                    overflow:      hidden;
+                }
                 #about {
                     text-align:    center;
                     cursor:        pointer;
                     outline-width: 0;
+                    overflow:      hidden;
+                }
+                                
+                #image {
+                    margin-top:     12%; 
+                    width:          62%; 
+                    height:         62%; 
                 }
                 
-                a { 
+                #version { 
+                    margin-top:     7%; 
                     color:          #{opt?.color ? '#333'};
                     font-family:    Verdana, sans-serif;
                     text-decoration: none;
                 }
-                a:hover { 
-                    color:          #f80; 
+                
+                #version:hover { 
+                    color:          #{opt?.highlight ? '#f80'}; 
                 }
                 
-                #image {
-                    margin-top:     50px; 
-                    width:          250px;
-                    height:         250px;
-                }
-                
-                #version { 
-                    margin-top:     30px; 
-                }
             </style>
             <div id='about' tabindex=0>
                 <img id='image' src="file://#{opt.img}"/>
                 <div id='version'>
-                    <a id='link' href="#">#{version}</a>
+                    #{version}
                 </div>
             </div>
             <script>
                 var electron = require('electron');
                 var ipc = electron.ipcRenderer;
                 var l = document.getElementById('version');
-                l.onclick = function () { ipc.send('openRepoURL'); }
+                l.onclick   = function () { ipc.send('openRepoURL'); }
                 var a = document.getElementById('about');
                 a.onclick   = function () { ipc.send('closeAbout'); }
                 a.onkeydown = function () { ipc.send('closeAbout'); }
@@ -88,7 +90,6 @@ class About
 
         win.loadURL "data:text/html;charset=utf-8," + encodeURI(html) 
         win.on 'ready-to-show', -> win.show()
-        # win.webContents.openDevTools()
         About.win = win
         win
 

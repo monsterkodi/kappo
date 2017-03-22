@@ -127,8 +127,10 @@ onWinResize = (event) ->
 showAbout = ->
     about 
         img:        "#{__dirname}/../img/about.png"
-        color:      "#080808"
-        background: "#282828"
+        color:      "#ddd"
+        highlight:  "#000"
+        background: "#fff"
+        size:       200
     
 app.on 'window-all-closed', (event) -> event.preventDefault()
 
