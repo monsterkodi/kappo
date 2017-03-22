@@ -65,6 +65,8 @@ toggleWindow = ->
     else
         showWindow()
 
+reloadWindow = -> win.webContents.reloadIgnoringCache()
+
 showWindow = -> getActiveApp()
     
 createWindow = ->
@@ -81,8 +83,8 @@ createWindow = ->
         maximizable:     false
         minimizable:     false
         minWidth:        200
-        maxWidth:        600
         minHeight:       200
+        maxWidth:        600
         maxHeight:       600
         fullscreen:      false
         show:            false
@@ -93,9 +95,7 @@ createWindow = ->
     win.on 'closed', -> win = null
     win.on 'resize', onWinResize
     win.on 'move',   saveBounds
-    win.on 'ready-to-show', -> 
-        win.webContents.send 'setWinID', win.id
-        win.show()
+    win.on 'ready-to-show', -> win.show()
     win
 
 saveBounds = -> if win? then prefs.set 'bounds', win.getBounds()
@@ -169,7 +169,7 @@ app.on 'ready', ->
         ,                            
             label:       'Reload Window'
             accelerator: 'Ctrl+Alt+Cmd+L'
-            click:       -> win?.webContents.reloadIgnoringCache()
+            click:       -> reloadWindow()
         ,                
             label:       'Toggle DevTools'
             accelerator: 'Cmd+Alt+I'
@@ -177,8 +177,9 @@ app.on 'ready', ->
         ]
     ]
         
-    prefs.init "#{app.getPath('userData')}/#{pkg.productName}.noon", shortcut: 'F1'
+    prefs.init shortcut: 'F1'
 
     electron.globalShortcut.register prefs.get('shortcut'), toggleWindow
-
+    
+    showWindow()
     

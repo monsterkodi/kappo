@@ -37,7 +37,6 @@ elem = (typ, opt) ->
         
     for k in Object.keys opt
         e.setAttribute k, opt[k]
-    
     e
 
 module.exports = elem

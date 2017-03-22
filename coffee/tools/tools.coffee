@@ -22,6 +22,19 @@ module.exports =
             return a[a.length-1]
         null
 
+    # 000   000   0000000   000      000   000  00000000
+    # 000   000  000   000  000      000   000  000     
+    #  000 000   000000000  000      000   000  0000000 
+    #    000     000   000  000      000   000  000     
+    #     0      000   000  0000000   0000000   00000000
+
+    clamp: (r1, r2, v) ->
+        if r1 > r2
+            [r1,r2] = [r2,r1]
+        v = Math.max(v, r1) if r1?
+        v = Math.min(v, r2) if r2?
+        v
+
     # 00000000    0000000   000000000  000   000
     # 000   000  000   000     000     000   000
     # 00000000   000000000     000     000000000
@@ -58,5 +71,15 @@ module.exports =
             e.querySelector idOrClass
         else
             document.getElementById idOrClass
+
+    sw: () -> document.body.clientWidth
+    sh: () -> document.body.clientHeight
+
+    setStyle: (selector, key, value, ssid=0) ->
+        for rule in document.styleSheets[ssid].cssRules
+            if rule.selectorText == selector
+                rule.style[key] = value
+                return
+        document.styleSheets[ssid].insertRule "#{selector} { #{key}: #{value} }", document.styleSheets[ssid].cssRules.length
 
     childIndex: (e) -> Array.prototype.indexOf.call(e.parentNode.childNodes, e)
