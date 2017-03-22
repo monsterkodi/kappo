@@ -47,6 +47,8 @@ winMain = () ->
     
     window.win = win
 
+    ipc.on 'clearSearch', clearSearch
+
     iconDir = resolve "#{__dirname}/../icons"
     fs.ensureDirSync iconDir
 
@@ -87,7 +89,14 @@ findApps = ->
 # 000   000  000        000       000  0000  
 #  0000000   000        00000000  000   000  
  
-openCurrent = () -> childp.exec "open -a \"#{apps[currentApp]}\"", (err) -> win.hide()
+openCurrent = -> 
+    childp.exec "open -a \"#{apps[currentApp]}\"", (err) -> 
+        if err?
+            log "[ERROR] can't open #{apps[currentApp]}"
+        # else
+            # appName = path.basename currentApp, '.app'
+            # childp.exec "#{__dirname}/../bin/appswitch -fa \"#{appName}\"", (err) ->
+                # if err? then log "[ERROR] can't appswitch to #{appName}"
 
 # 0000000   00000000   00000000   000   0000000   0000000   000   000
 #000   000  000   000  000   000  000  000       000   000  0000  000
@@ -171,11 +180,21 @@ doSearch = (s) ->
 complete  = (key) -> doSearch search + key
 backspace =       -> doSearch search.substr 0, search.length-1
 
-cancelSearchOrClose = -> if search.length then doSearch '' else ipc.send 'done'
+cancelSearchOrClose = -> if search.length then doSearch '' else ipc.send 'cancel'
+clearSearch = ->
+    if fuzzied.length
+        search = ''
+        fuzzied = [fuzzied[Math.min current, fuzzied.length-1]]
+        fuzzied[0].string = currentApp
+        $('appname').innerHTML = currentApp
+        current = 0
+        showDots()
+    else
+        doSearch ''
         
 window.onclick  = -> openCurrent()
 window.onunload = -> document.onkeydown = null    
-window.onblur   = -> ipc.send 'done'
+window.onblur   = -> win.hide()
 window.onresize = -> showDots()
 
 #  0000000  000  0000000  00000000  

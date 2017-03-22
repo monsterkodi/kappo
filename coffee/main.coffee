@@ -30,7 +30,7 @@ debug         = false
 # 000  000        000     
 # 000  000         0000000
 
-ipc.on 'done', -> activateApp()
+ipc.on 'cancel', -> activateApp()
     
 # 0000000    0000000  000000000  000  000   000  00000000
 #000   000  000          000     000  000   000  000     
@@ -44,6 +44,7 @@ getActiveApp = ->
         activeApp = pid
         if win?
             win.show()
+            win.webContents.send 'clearSearch'
         else
             createWindow()
     
