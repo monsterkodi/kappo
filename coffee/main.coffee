@@ -41,16 +41,15 @@ ipc.on 'cancel', -> activateApp()
 appName = null
 activeApp = null
 getActiveApp = ->
-    childp.exec "#{__dirname}/../bin/appswitch -P", (err, pid) ->
-        activeApp = pid
-        if win?
-            if appName?
-                win.webContents.send 'currentApp', appName 
-            else
-                win.webContents.send 'clearSearch'            
+    activeApp = childp.execSync "#{__dirname}/../bin/appswitch -P"
+    if win?
+        if appName?
+            win.webContents.send 'currentApp', appName 
         else
-            createWindow()
-    
+            win.webContents.send 'clearSearch'            
+    else
+        createWindow()
+
 activateApp = ->
     if not activeApp?
         win?.hide()
@@ -67,19 +66,17 @@ toggleWindow = ->
     if win?.isVisible()
         activateApp()   
     else
+        win.show()
+        win.focus()
         script = osascript """
         tell application "System Events"
             set n to name of first application process whose frontmost is true
         end tell
         do shell script "echo " & n
         """
-        childp.exec "osascript #{script}", (err, name) ->
-            if not err?
-                appName = String(name).trim()    
-            else
-                appName = null
-                log "[ERROR] can't get application name via osascript: #{err}"
-            getActiveApp()
+        name = childp.execSync "osascript #{script}"
+        appName = String(name).trim() 
+        getActiveApp()
 
 reloadWindow = -> win.webContents.reloadIgnoringCache()
 
