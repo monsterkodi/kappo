@@ -32,7 +32,6 @@ debug         = false
 
 ipc.on 'done', -> activateApp()
     
-
 # 0000000    0000000  000000000  000  000   000  00000000
 #000   000  000          000     000  000   000  000     
 #000000000  000          000     000   000 000   0000000 
@@ -49,8 +48,9 @@ getActiveApp = ->
             createWindow()
     
 activateApp = ->
-    return if not activeApp?
-    log 'activateApp', activeApp
+    if not activeApp?
+        win?.hide()
+        return
     childp.exec "#{__dirname}/../bin/appswitch -fp #{activeApp}", (err) -> win?.hide()
 
 #000   000  000  000   000  0000000     0000000   000   000
