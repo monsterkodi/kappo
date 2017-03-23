@@ -27,7 +27,7 @@ Press **⌘i** to change between the bright and dark scheme.
 
 You can change the default activation key in
 
-    ~/Library/Application\ Support/kappo/kappo.noon
+    ~/Library/Application\ Support/kappo/prefs.noon
 
 after first lauch of **kappo**. 
 
