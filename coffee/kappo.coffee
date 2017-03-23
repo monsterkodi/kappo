@@ -71,11 +71,12 @@ findApps = ->
         "/Applications"
         "/Applications/Utilities"
         ]
+    appFolders = appFolders.concat prefs.get 'dirs', []
     foldersLeft = appFolders.length
     
     for appFolder in appFolders
-
-        walk = walkdir resolve(appFolder), no_recurse: true
+        walkOpt = prefs.get 'walk', no_recurse: true
+        walk = walkdir resolve(appFolder), walkOpt
         walk.on 'error', (err) -> log "[ERROR] #{err}"
         walk.on 'end', -> 
             foldersLeft -= 1 
@@ -289,6 +290,7 @@ setScheme = (scheme) ->
 
 document.onkeydown = (event) ->
     {mod, key, combo} = keyinfo.forEvent event
+    log mod, key, combo
     if mod in ['', 'shift'] and key.length == 1
         complete key
         return

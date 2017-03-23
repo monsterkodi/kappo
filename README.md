@@ -31,6 +31,14 @@ You can change the default activation key in
 
 after first lauch of **kappo**. 
 
+The application search can be configured like this:
+```coffee    
+    walk
+            max_depth  2        # default is no_recurse
+    dirs
+            ~/Applications      # those will be added to 
+            /SomeOtherLocation  # /Applications and /Applications/Utilities
+```
 # how
 
 **kappo** is a very simple [electron](http://electron.atom.io/) application.
