@@ -62,7 +62,7 @@ What I want:
 - clean, minimal look
 - focus on the application icons, not the names
 - large and resizable application icons
-- switch between apps (what the macOS **⌘+Tab** does) when apps match *TBD*
+- switch between apps (what the macOS **⌘+Tab** does) when apps match
     
 almost there 😊
 
