@@ -3,13 +3,13 @@
 #000000000  00000000   00000000   000  000       000   000  000 0 000  
 #000   000  000        000        000  000       000   000  000  0000  
 #000   000  000        000        000   0000000   0000000   000   000  
-
-{resolve} = require './tools'
+{
+resolve,
+log}      = require 'kxk'
 fs        = require 'fs'
 path      = require 'path'
 plist     = require 'simple-plist'
 childp    = require 'child_process'
-log       = require './log'
 
 class AppIcon
     

@@ -8,16 +8,16 @@ encodePath,
 childIndex,
 setStyle,
 resolve,
+keyinfo,
+history,
 clamp,
+prefs,
+elem,
 last,
+log,
 sw,
-$}          = require './tools/tools'
-appIcon     = require './tools/appicon'
-keyinfo     = require './tools/keyinfo'
-history     = require './tools/history'
-prefs       = require './tools/prefs'
-elem        = require './tools/elem'
-log         = require './tools/log'
+$}          = require 'kxk'
+appIcon     = require './appicon'
 pkg         = require '../package.json'
 _           = require 'lodash'
 childp      = require 'child_process'

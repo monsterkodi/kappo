@@ -3,11 +3,12 @@
 # 000000000  000000000  000  000 0 000
 # 000 0 000  000   000  000  000  0000
 # 000   000  000   000  000  000   000
-
-{osascript}   = require './tools/tools'
-prefs         = require './tools/prefs'
-about         = require './tools/about'
-log           = require './tools/log'
+{
+osascript,
+about,
+prefs,
+log,
+}             = require 'kxk'
 pkg           = require '../package.json'
 childp        = require 'child_process'
 electron      = require 'electron'
@@ -131,6 +132,7 @@ showAbout = ->
         highlight:  "#000"
         background: "#fff"
         size:       200
+        pkg:        pkg
     
 app.on 'window-all-closed', (event) -> event.preventDefault()
 
