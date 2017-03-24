@@ -255,6 +255,16 @@ window.onunload = -> document.onkeydown = null
 window.onblur   = -> win.hide()
 window.onresize = -> showDots()
 
+wheelAccu = 0
+window.onwheel  = (event) -> 
+    wheelAccu += (event.deltaX + event.deltaY)/44
+    if wheelAccu > 1
+        select current+1 % results.length
+        wheelAccu -= 1
+    else if wheelAccu < -1
+        select current+results.length-1 % results.length
+        wheelAccu += 1
+
 #  0000000  000  0000000  00000000  
 # 000       000     000   000       
 # 0000000   000    000    0000000   

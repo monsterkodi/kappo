@@ -77,7 +77,6 @@ almost there 😊
 
 Also nice to have:
 
-- scroll wheel *TBD*
 - list all apps when resetting search *TBD*
 - history mode *TBD*
 
