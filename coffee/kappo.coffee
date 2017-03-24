@@ -116,7 +116,7 @@ findApps = ->
 #  0000000   0000000   000   000  000   000  00000000  000   000     000     
 
 currentApp = (e, appName) ->
-    if currentName == appName and appHist.previous()
+    if currentName.toLowerCase() == appName.toLowerCase() and appHist.previous()
         doSearch appHist.previous()
     clearSearch()
 
@@ -339,6 +339,7 @@ document.onkeydown = (event) ->
         when 'command+alt+i'         then win.webContents.openDevTools()
         when 'command+='             then biggerWindow()
         when 'command+-'             then smallerWindow()
+        when 'command+r'             then findApps()
         when 'command+up'            then moveWindow 0,-20
         when 'command+down'          then moveWindow 0, 20
         when 'command+left'          then moveWindow -20, 0

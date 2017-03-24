@@ -79,7 +79,7 @@ toggleWindow = ->
         do shell script "echo " & n
         """
         name = childp.execSync "osascript #{script}"
-        appName = String(name).trim() 
+        appName = String(name).trim()
         getActiveApp()
 
 reloadWindow = -> win.webContents.reloadIgnoringCache()
