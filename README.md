@@ -63,7 +63,7 @@ What I need:
 
 - fast
 - efficient fuzzy search, e.g. **ff** should find Firefox
-- sleep and shutdown commands *TBD*
+- sleep, shutdown and restart commands
 
 What I want:
 
@@ -71,6 +71,7 @@ What I want:
 - focus on the application icons, not the names
 - large and resizable application icons
 - switch between apps (what the macOS **⌘+Tab** does) when apps match
+- heuristic to repeat previous actions when ranking is the same *TBD*
     
 almost there 😊
 

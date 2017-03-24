@@ -32,10 +32,11 @@ browser     = electron.remote.BrowserWindow
 ipc         = electron.ipcRenderer
 win         = electron.remote.getCurrentWindow()
 iconDir     = null
-fuzzied     = []
+results     = []
 apps        = {}
+scripts     = {}
 search      = ''
-currentApp  = ''
+currentName  = ''
 appHist     = new history
 current     = 0
 
@@ -57,8 +58,29 @@ winMain = () ->
 
     prefs.init()
     setScheme prefs.get 'scheme', 'bright.css'
+    findScripts()
     findApps()
 
+#  0000000   0000000  00000000   000  00000000   000000000   0000000  
+# 000       000       000   000  000  000   000     000     000       
+# 0000000   000       0000000    000  00000000      000     0000000   
+#      000  000       000   000  000  000           000          000  
+# 0000000    0000000  000   000  000  000           000     0000000   
+
+findScripts = () ->
+    scripts = 
+        sleep:
+            exec:   "pmset sleepnow"
+            img:    "#{__dirname}/../scripts/sleep.png"
+        shutdown:
+            # exec:   "osascript -e 'tell app \"loginwindow\" to «event aevtrsdn»'" # << with confirmation
+            exec:   "osascript -e 'tell app \"System Events\" to shut down'" 
+            img:    "#{__dirname}/../scripts/shutdown.png"
+        restart:
+            # exec:   "osascript -e 'tell app \"loginwindow\" to «event aevtrrst»'" # << with confirmation
+            exec:   "osascript -e 'tell app \"System Events\" to restart'"
+            img:    "#{__dirname}/../scripts/restart.png"
+    
 # 00000000  000  000   000  0000000     0000000   00000000   00000000    0000000  
 # 000       000  0000  000  000   000  000   000  000   000  000   000  000       
 # 000000    000  000 0 000  000   000  000000000  00000000   00000000   0000000   
@@ -94,9 +116,12 @@ findApps = ->
 #  0000000   0000000   000   000  000   000  00000000  000   000     000     
 
 currentApp = (e, appName) ->
-    if currentApp == appName and appHist.previous()
+    if currentName == appName and appHist.previous()
         doSearch appHist.previous()
     clearSearch()
+
+currentIsApp = => not currentIsScript()
+currentIsScript = -> results[current]?.script?
 
 #  0000000  000      00000000   0000000   00000000   
 # 000       000      000       000   000  000   000  
@@ -105,11 +130,11 @@ currentApp = (e, appName) ->
 #  0000000  0000000  00000000  000   000  000   000  
 
 clearSearch = ->
-    if fuzzied.length
+    if results.length
         search = ''
-        fuzzied = [fuzzied[Math.min current, fuzzied.length-1]]
-        fuzzied[0].string = currentApp
-        $('appname').innerHTML = currentApp
+        results = [results[Math.min current, results.length-1]]
+        results[0].string = currentName
+        $('appname').innerHTML = currentName
         current = 0
         showDots()
     else
@@ -123,30 +148,32 @@ clearSearch = ->
 #  0000000   000        00000000  000   000  
 
 openCurrent = -> 
-    appHist.add currentApp
-    childp.exec "open -a \"#{apps[currentApp]}\"", (err) -> 
-        if err?
-            log "[ERROR] can't open #{apps[currentApp]}"
-        # else
-            # appName = path.basename currentApp, '.app'
-            # childp.exec "#{__dirname}/../bin/appswitch -fa \"#{appName}\"", (err) ->
-                # if err? then log "[ERROR] can't appswitch to #{appName}"
+    if currentIsApp()
+        appHist.add currentName 
+        childp.exec "open -a \"#{apps[currentName]}\"", (err) -> 
+            if err? then log "[ERROR] can't open #{apps[currentName]} #{err}"
+    else
+        childp.exec scripts[currentName].exec, (err) -> 
+            if err? then log "[ERROR] can't execute script #{scripts[currentName]}: #{err}"
 
-# 0000000   00000000   00000000   000   0000000   0000000   000   000
-#000   000  000   000  000   000  000  000       000   000  0000  000
-#000000000  00000000   00000000   000  000       000   000  000 0 000
-#000   000  000        000        000  000       000   000  000  0000
-#000   000  000        000        000   0000000   0000000   000   000
+# 000   0000000   0000000   000   000
+# 000  000       000   000  0000  000
+# 000  000       000   000  000 0 000
+# 000  000       000   000  000  0000
+# 000   0000000   0000000   000   000
         
+getScriptIcon = (scriptName) -> setIcon scripts[scriptName].img
 getAppIcon = (appName) ->
     iconPath = "#{iconDir}/#{appName}.png"
     appIcon.get 
         appPath: apps[appName]
         iconDir: iconDir 
         size:    512
-        cb: (iconPath) ->
-            img =$ 'appicon'
-            img.style.backgroundImage = "url(file://#{encodePath iconPath})"
+        cb: setIcon
+
+setIcon = (iconPath) ->
+    img =$ 'appicon'
+    img.style.backgroundImage = "url(file://#{encodePath iconPath})"
 
 #  0000000  00000000  000      00000000   0000000  000000000  
 # 000       000       000      000       000          000     
@@ -155,12 +182,15 @@ getAppIcon = (appName) ->
 # 0000000   00000000  0000000  00000000   0000000     000     
 
 select = (index) =>
-    current = (index + fuzzied.length) % fuzzied.length
-    currentApp = fuzzied[current].original
-    $('appname').innerHTML = fuzzied[current].string
+    current = (index + results.length) % results.length
+    currentName = results[current].name
+    $('appname').innerHTML = results[current].string
     $('.current')?.classList.remove 'current'
     $("dot_#{current}")?.classList.add 'current'
-    getAppIcon currentApp
+    if currentIsApp()
+        getAppIcon currentName
+    else
+        getScriptIcon currentName
 
 #   0000000     0000000   000000000   0000000  
 #   000   000  000   000     000     000       
@@ -176,17 +206,17 @@ showDots = ->
     winWidth = sw()
     setStyle '#appname', 'font-size', "#{parseInt 10+2*(winWidth-100)/100}px"
     
-    return if fuzzied.length < 2
+    return if results.length < 2
     
     dotr = elem id:'appdotr'
     dots.appendChild dotr
     
-    s = winWidth / fuzzied.length
+    s = winWidth / results.length
     s = clamp 1, winWidth/100, s
     setStyle '.appdot', 'width', "#{s}px"
     setStyle '.appdot', 'height', "#{s}px"
     
-    for i in [0...fuzzied.length]
+    for i in [0...results.length]
         dot = elem 'span', class:'appdot', id: "dot_#{i}"
         if i == current
             dot.classList.add 'current'
@@ -200,11 +230,15 @@ showDots = ->
 
 doSearch = (s) ->
     search = s
-    appNames = Object.keys apps
-    fuzzied = fuzzy.filter search, appNames, pre: '<b>', post: '</b>'
-    fuzzied = _.sortBy fuzzied, (o) -> 2 - fuzzaldrin.score o.original, search
+    names = Object.keys(apps).concat Object.keys(scripts)
+    results = fuzzy.filter search, names, pre: '<b>', post: '</b>'
+    results = _.sortBy results, (o) -> 2 - fuzzaldrin.score o.original, search
+    
+    for r in results
+        r.name = r.original
+        r.script = scripts[r.name]
                 
-    if fuzzied.length
+    if results.length
         select 0
         showDots()
     else
