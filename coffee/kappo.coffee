@@ -328,22 +328,22 @@ document.onkeydown = (event) ->
     if mod in ['', 'shift'] and key.length == 1
         complete key
         return
-    switch combo
-        when 'backspace'         then backspace()
-        when 'command+backspace' then doSearch ''
-        when 'command+i'         then toggleScheme()
-        when 'esc'               then cancelSearchOrClose()
-        when 'down', 'right'     then select current+1
-        when 'up'  , 'left'      then select current-1
-        when 'enter'             then openCurrent()
-        when 'command+alt+i'     then win.webContents.openDevTools()
-        when 'command+='         then biggerWindow()
-        when 'command+-'         then smallerWindow()
-        when 'command+up'        then moveWindow 0,-20
-        when 'command+down'      then moveWindow 0, 20
-        when 'command+left'      then moveWindow -20, 0
-        when 'command+right'     then moveWindow  20, 0
-        when 'command+0'         then toggleWindowSize()
+    switch combo                     
+        when 'backspace'             then backspace()
+        when 'command+backspace'     then doSearch ''
+        when 'command+i'             then toggleScheme()
+        when 'esc'                   then cancelSearchOrClose()
+        when 'down', 'right'         then select current+1
+        when 'up'  , 'left'          then select current-1
+        when 'enter'                 then openCurrent()
+        when 'command+alt+i'         then win.webContents.openDevTools()
+        when 'command+='             then biggerWindow()
+        when 'command+-'             then smallerWindow()
+        when 'command+up'            then moveWindow 0,-20
+        when 'command+down'          then moveWindow 0, 20
+        when 'command+left'          then moveWindow -20, 0
+        when 'command+right'         then moveWindow  20, 0
+        when 'command+0','command+o' then toggleWindowSize()
 
 winMain()
 

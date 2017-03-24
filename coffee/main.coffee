@@ -67,8 +67,11 @@ toggleWindow = ->
     if win?.isVisible()
         activateApp()   
     else
-        win.show()
-        win.focus()
+        if not win?
+            createWindow()
+        else
+            win.show()
+            win.focus()
         script = osascript """
         tell application "System Events"
             set n to name of first application process whose frontmost is true
@@ -198,5 +201,5 @@ app.on 'ready', ->
 
     electron.globalShortcut.register prefs.get('shortcut'), toggleWindow
     
-    showWindow()
+    # showWindow()
     
