@@ -72,7 +72,13 @@ What I want:
 - large and resizable application icons
 - switch between apps (what the macOS **⌘+Tab** does) when apps match
 - heuristic to repeat previous actions when ranking is the same *TBD*
-    
+
 almost there 😊
+
+Also nice to have:
+
+- scroll wheel *TBD*
+- list all apps when resetting search *TBD*
+- history mode *TBD*
 
 
