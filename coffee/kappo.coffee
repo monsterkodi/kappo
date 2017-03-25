@@ -15,6 +15,7 @@ prefs,
 elem,
 last,
 log,
+pos,
 sw,
 $}           = require 'kxk'
 appIcon      = require './appicon'
@@ -124,10 +125,13 @@ findApps = ->
 currentApp = (e, appName) ->
     if currentName.toLowerCase() == appName.toLowerCase() and appHist.previous()
         doSearch appHist.previous()
+        clearSearch()
     else
         name = currentName
         doSearch ''
         selectName name
+        search = ''
+        $('appname').innerHTML = name
 
 currentIsApp = => not currentIsScript()
 currentIsScript = -> results[current]?.script?
@@ -209,7 +213,9 @@ select = (index) =>
     else
         getScriptIcon currentName
 
-selectName = (name) -> select results.findIndex (r) -> r.name.toLowerCase() == name.toLowerCase()
+selectName = (name) -> 
+    select results.findIndex (r) -> 
+        r.name.toLowerCase() == name.toLowerCase()
 
 #   0000000     0000000   000000000   0000000  
 #   000   000  000   000     000     000       
@@ -272,7 +278,10 @@ backspace =       -> doSearch search.substr 0, search.length-1
 
 cancelSearchOrClose = -> if search.length then doSearch '' else ipc.send 'cancel'
 
-window.onclick  = -> openCurrent()
+clickID = downID = 0
+window.onmousedown = (e) -> clickID += 1 ; downID = clickID
+window.onmouseup = (e) -> openCurrent() if downID == clickID
+window.onmousemove = (e) -> if e.buttons then downID = -1
 window.onunload = -> document.onkeydown = null    
 window.onblur   = -> win.hide()
 window.onresize = -> showDots()
