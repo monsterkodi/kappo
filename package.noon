@@ -1,6 +1,6 @@
 name            kappo
 productName     kappo
-version         0.4.1
+version         0.5.0
 description     application opener
 main            js/main.js
 repository

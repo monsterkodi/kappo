@@ -146,7 +146,11 @@ app.on 'window-all-closed', (event) -> event.preventDefault()
 #000   000  00000000  000   000  0000000       000   
 
 app.on 'ready', -> 
-    
+
+    if app.makeSingleInstance(->)
+        app.exit 0
+        return
+
     tray = new Tray "#{__dirname}/../img/menu.png"
     tray.on 'click', toggleWindow
     app.dock.hide() if app.dock

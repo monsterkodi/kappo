@@ -16,29 +16,30 @@ elem,
 last,
 log,
 sw,
-$}          = require 'kxk'
-appIcon     = require './appicon'
-pkg         = require '../package.json'
-_           = require 'lodash'
-childp      = require 'child_process'
-fs          = require 'fs-extra'
-walkdir     = require 'walkdir'
-fuzzy       = require 'fuzzy'
-fuzzaldrin  = require 'fuzzaldrin'
-path        = require 'path'
-electron    = require 'electron'
-clipboard   = electron.clipboard
-browser     = electron.remote.BrowserWindow
-ipc         = electron.ipcRenderer
-win         = electron.remote.getCurrentWindow()
-iconDir     = null
-results     = []
-apps        = {}
-scripts     = {}
-search      = ''
+$}           = require 'kxk'
+appIcon      = require './appicon'
+pkg          = require '../package.json'
+_            = require 'lodash'
+childp       = require 'child_process'
+fs           = require 'fs-extra'
+walkdir      = require 'walkdir'
+fuzzy        = require 'fuzzy'
+fuzzaldrin   = require 'fuzzaldrin'
+path         = require 'path'
+electron     = require 'electron'
+clipboard    = electron.clipboard
+browser      = electron.remote.BrowserWindow
+ipc          = electron.ipcRenderer
+win          = electron.remote.getCurrentWindow()
+iconDir      = null
+results      = []
+apps         = {}
+scripts      = {}
+allKeys      = []
+search       = ''
 currentName  = ''
-appHist     = new history
-current     = 0
+appHist      = new history
+current      = 0
 
 # 000   000  000  000   000  00     00   0000000   000  000   000  
 # 000 0 000  000  0000  000  000   000  000   000  000  0000  000  
@@ -60,6 +61,10 @@ winMain = () ->
     setScheme prefs.get 'scheme', 'bright.css'
     findScripts()
     findApps()
+    
+sortKeys = ->
+    allKeys = Object.keys(apps).concat Object.keys(scripts)
+    allKeys.sort (a,b) -> a.toLowerCase().localeCompare b.toLowerCase() 
 
 #  0000000   0000000  00000000   000  00000000   000000000   0000000  
 # 000       000       000   000  000  000   000     000     000       
@@ -103,6 +108,7 @@ findApps = ->
         walk.on 'end', -> 
             foldersLeft -= 1 
             if foldersLeft == 0
+                sortKeys()
                 doSearch ''
         walk.on 'directory', (dir) -> 
             if path.extname(dir) == '.app'
@@ -118,10 +124,21 @@ findApps = ->
 currentApp = (e, appName) ->
     if currentName.toLowerCase() == appName.toLowerCase() and appHist.previous()
         doSearch appHist.previous()
-    clearSearch()
+    else
+        name = currentName
+        doSearch ''
+        selectName name
 
 currentIsApp = => not currentIsScript()
 currentIsScript = -> results[current]?.script?
+
+# 000   000  000   0000000  000000000   0000000   00000000   000   000  
+# 000   000  000  000          000     000   000  000   000   000 000   
+# 000000000  000  0000000      000     000   000  0000000      00000    
+# 000   000  000       000     000     000   000  000   000     000     
+# 000   000  000  0000000      000      0000000   000   000     000     
+
+listHistory = () ->
 
 #  0000000  000      00000000   0000000   00000000   
 # 000       000      000       000   000  000   000  
@@ -192,6 +209,8 @@ select = (index) =>
     else
         getScriptIcon currentName
 
+selectName = (name) -> select results.findIndex (r) -> r.name.toLowerCase() == name.toLowerCase()
+
 #   0000000     0000000   000000000   0000000  
 #   000   000  000   000     000     000       
 #   000   000  000   000     000     0000000   
@@ -229,8 +248,8 @@ showDots = ->
 # 0000000   00000000  000   000  000   000   0000000  000   000  
 
 doSearch = (s) ->
-    search = s
-    names = Object.keys(apps).concat Object.keys(scripts)
+    search  = s
+    names   = allKeys
     results = fuzzy.filter search, names, pre: '<b>', post: '</b>'
     results = _.sortBy results, (o) -> 2 - fuzzaldrin.score o.original, search
     
@@ -239,7 +258,10 @@ doSearch = (s) ->
         r.script = scripts[r.name]
                 
     if results.length
-        select 0
+        if s == ''
+            selectName 'Finder' 
+        else 
+            select 0
         showDots()
     else
         $('appdots').innerHTML = ''
@@ -334,7 +356,7 @@ setScheme = (scheme) ->
 
 document.onkeydown = (event) ->
     {mod, key, combo} = keyinfo.forEvent event
-    log mod, key, combo
+    # log mod, key, combo
     if mod in ['', 'shift'] and key.length == 1
         complete key
         return
@@ -350,6 +372,7 @@ document.onkeydown = (event) ->
         when 'command+='             then biggerWindow()
         when 'command+-'             then smallerWindow()
         when 'command+r'             then findApps()
+        when 'command+h'             then listHistory()
         when 'command+up'            then moveWindow 0,-20
         when 'command+down'          then moveWindow 0, 20
         when 'command+left'          then moveWindow -20, 0

@@ -75,9 +75,4 @@ What I want:
 
 almost there 😊
 
-Also nice to have:
-
-- list all apps when resetting search *TBD*
-- history mode *TBD*
-
 
