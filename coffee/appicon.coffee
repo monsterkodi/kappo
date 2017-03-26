@@ -39,6 +39,11 @@ class AppIcon
                     icnsPath = path.join path.dirname(infoPath), 'Resources', obj['CFBundleIconFile']
                     icnsPath += ".icns" if not icnsPath.endsWith '.icns'
                     AppIcon.saveIcon icnsPath, opt
+                else
+                    AppIcon.brokenIcon opt
+            else
+                log "[ERROR] getIcon: #{err}"
+                AppIcon.brokenIcon opt
                 
     @saveIcon: (icnsPath, opt) ->
         pngPath = AppIcon.pngPath opt
@@ -47,5 +52,10 @@ class AppIcon
                 opt.cb pngPath, opt.cbArg
             else
                 log "[ERROR] saveIcon: #{err}"
-                
+                AppIcon.brokenIcon opt
+     
+    @brokenIcon: (opt) ->
+        brokenPath = path.join __dirname, '..', 'img', 'broken.png'
+        opt.cb brokenPath, opt.cbArg
+        
 module.exports = AppIcon
