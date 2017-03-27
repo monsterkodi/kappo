@@ -16,6 +16,39 @@ Click or press **enter** to activate the current application.
 
 Press **esc** to cancel the current search or close the window.
 
+### preferences
+
+are stored in
+    
+    ~/Library/Application\ Support/kappo/prefs.noon
+
+Some examples how to configure the application:
+```coffee        
+    # change the default shortcut:
+    
+    shortcut            Alt+space
+    
+    # kappo searches for applications in /Applications and /Applications/Utilities
+    # you can add directories like this:
+    
+    dirs
+        ~/Applications
+        /SomeOtherLocation
+            
+    # by default, kappo doesn't recurse into subdirectories
+    # this enables recusion:
+    
+    walk
+        max_depth       2
+
+    # kappo keeps a list of recently opened applications.
+    # to change the maximum history length (default is 10):
+    
+    maxHistoryLength    50    
+```
+
+### keyboard shortcuts
+
 The window size and position can be changed with the mouse or the following shortcuts:
     
 - **⌘up|down|left|right** move window
@@ -25,20 +58,9 @@ The window size and position can be changed with the mouse or the following shor
 
 Press **⌘i** to change between the bright and dark scheme.
 
-You can change the default activation key in
+- **⌘F** show current application in the Finder
+- **⌘H** list history of recently opened applications
 
-    ~/Library/Application\ Support/kappo/prefs.noon
-
-after first lauch of **kappo**. 
-
-The application search can be configured like this:
-```coffee    
-    walk
-            max_depth  2        # default is no_recurse
-    dirs
-            ~/Applications      # those will be added to 
-            /SomeOtherLocation  # /Applications and /Applications/Utilities
-```
 # how
 
 **kappo** is a very simple [electron](http://electron.atom.io/) application.
@@ -71,8 +93,8 @@ What I want:
 - focus on the application icons, not the names
 - large and resizable application icons
 - switch between apps (what the macOS **⌘+Tab** does) when apps match
-- heuristic to repeat previous actions when ranking is the same *TBD*
+- heuristic to repeat previous actions when ranking is the same
 
-almost there 😊
+😊
 
 

@@ -10,6 +10,7 @@ setStyle,
 resolve,
 keyinfo,
 history,
+scheme,
 clamp,
 prefs,
 elem,
@@ -33,13 +34,13 @@ browser      = electron.remote.BrowserWindow
 ipc          = electron.ipcRenderer
 win          = electron.remote.getCurrentWindow()
 iconDir      = null
+appHist      = null
 results      = []
 apps         = {}
 scripts      = {}
 allKeys      = []
 search       = ''
 currentName  = ''
-appHist      = new history
 current      = 0
 
 # 000   000  000  000   000  00     00   0000000   000  000   000  
@@ -59,7 +60,12 @@ winMain = () ->
     fs.ensureDirSync iconDir
 
     prefs.init()
-    setScheme prefs.get 'scheme', 'bright.css'
+    
+    appHist = new history 
+        list:      prefs.get 'history', []
+        maxLength: prefs.get 'maxHistoryLength', 10
+        
+    scheme.set prefs.get 'scheme', 'bright'
     findScripts()
     findApps()
     
@@ -79,13 +85,16 @@ findScripts = () ->
             exec:   "pmset sleepnow"
             img:    "#{__dirname}/../scripts/sleep.png"
         shutdown:
-            # exec:   "osascript -e 'tell app \"loginwindow\" to «event aevtrsdn»'" # << with confirmation
             exec:   "osascript -e 'tell app \"System Events\" to shut down'" 
             img:    "#{__dirname}/../scripts/shutdown.png"
         restart:
-            # exec:   "osascript -e 'tell app \"loginwindow\" to «event aevtrrst»'" # << with confirmation
             exec:   "osascript -e 'tell app \"System Events\" to restart'"
             img:    "#{__dirname}/../scripts/restart.png"
+            
+    if prefs.get 'confirmShutdown'
+        scripts.shutdown.exec = "osascript -e 'tell app \"loginwindow\" to «event aevtrsdn»'"
+    if prefs.get 'confirmRestart'
+        scripts.restart.exec = "osascript -e 'tell app \"loginwindow\" to «event aevtrrst»'"
     
 # 00000000  000  000   000  0000000     0000000   00000000   00000000    0000000  
 # 000       000  0000  000  000   000  000   000  000   000  000   000  000       
@@ -116,6 +125,26 @@ findApps = ->
                 name = path.basename dir, '.app'
                 apps[name] = dir 
 
+#  0000000   00000000   00000000  000   000  
+# 000   000  000   000  000       0000  000  
+# 000   000  00000000   0000000   000 0 000  
+# 000   000  000        000       000  0000  
+#  0000000   000        00000000  000   000  
+
+openCurrent = ->
+    
+    if current > 0 and search.length
+        prefs.set "search:#{search}:#{currentName}", 1 + prefs.get "search:#{search}:#{currentName}", 0
+        
+    if currentIsApp()
+        appHist.add currentName 
+        prefs.set 'history', appHist.list
+        childp.exec "open -a \"#{apps[currentName]}\"", (err) -> 
+            if err? then log "[ERROR] can't open #{apps[currentName]} #{err}"
+    else
+        childp.exec scripts[currentName].exec, (err) -> 
+            if err? then log "[ERROR] can't execute script #{scripts[currentName]}: #{err}"
+
 #  0000000  000   000  00000000   00000000   00000000  000   000  000000000  
 # 000       000   000  000   000  000   000  000       0000  000     000     
 # 000       000   000  0000000    0000000    0000000   000 0 000     000     
@@ -143,6 +172,18 @@ currentIsScript = -> results[current]?.script?
 # 000   000  000  0000000      000      0000000   000   000     000     
 
 listHistory = () ->
+    results = []
+    for h in appHist.list
+        results.push string: h, name: h
+    select results.length-1
+    showDots()
+    
+openInFinder = () -> 
+    childp.spawn 'osascript', [
+        '-e', 'tell application "Finder"', 
+        '-e', "reveal POSIX file \"#{apps[currentName]}\"",
+        '-e', 'activate',
+        '-e', 'end tell']
 
 #  0000000  000      00000000   0000000   00000000   
 # 000       000      000       000   000  000   000  
@@ -161,21 +202,6 @@ clearSearch = ->
     else
         doSearch ''
     win.show()
-
-#  0000000   00000000   00000000  000   000  
-# 000   000  000   000  000       0000  000  
-# 000   000  00000000   0000000   000 0 000  
-# 000   000  000        000       000  0000  
-#  0000000   000        00000000  000   000  
-
-openCurrent = -> 
-    if currentIsApp()
-        appHist.add currentName 
-        childp.exec "open -a \"#{apps[currentName]}\"", (err) -> 
-            if err? then log "[ERROR] can't open #{apps[currentName]} #{err}"
-    else
-        childp.exec scripts[currentName].exec, (err) -> 
-            if err? then log "[ERROR] can't execute script #{scripts[currentName]}: #{err}"
 
 # 000   0000000   0000000   000   000
 # 000  000       000   000  0000  000
@@ -238,6 +264,7 @@ showDots = ->
     
     s = winWidth / results.length
     s = clamp 1, winWidth/100, s
+    s = parseInt s
     setStyle '.appdot', 'width', "#{s}px"
     setStyle '.appdot', 'height', "#{s}px"
     
@@ -256,12 +283,19 @@ showDots = ->
 doSearch = (s) ->
     search  = s
     names   = allKeys
-    results = fuzzy.filter search, names, pre: '<b>', post: '</b>'
-    results = _.sortBy results, (o) -> 2 - fuzzaldrin.score o.original, search
+    fuzzied = fuzzy.filter search, names, pre: '<b>', post: '</b>'
+    fuzzied = _.sortBy fuzzied, (o) -> 2 - fuzzaldrin.score o.original, search
     
-    for r in results
-        r.name = r.original
-        r.script = scripts[r.name]
+    if search.length
+        if ps = prefs.get "search:#{search}"
+            fuzzied = _.sortBy fuzzied, (o) -> Number.MAX_SAFE_INTEGER - (ps[o.original] ? 0)
+            log 'fuzzied by prefs', fuzzied
+    
+    results = []
+    for f in fuzzied
+        r = name: f.original, string: f.string
+        r.script = scripts[r.name] if scripts[r.name]
+        results.push r
                 
     if results.length
         if s == ''
@@ -332,31 +366,6 @@ minimizeWindow   = -> win.setBounds x:screenSize().width/2-100, y:0, width:200, 
 maximizeWindow   = -> win.setBounds x:screenSize().width/2-300, y:0, width:600, height:600
 toggleWindowSize = -> if win.getBounds().width > 200 then minimizeWindow() else maximizeWindow()
 
-#  0000000   0000000  000   000  00000000  00     00  00000000  
-# 000       000       000   000  000       000   000  000       
-# 0000000   000       000000000  0000000   000000000  0000000   
-#      000  000       000   000  000       000 0 000  000       
-# 0000000    0000000  000   000  00000000  000   000  00000000  
-
-toggleScheme = ->
-    link =$ 'style-link' 
-    currentScheme = last link.href.split('/')
-    schemes = ['dark.css', 'bright.css']
-    nextSchemeIndex = ( schemes.indexOf(currentScheme) + 1) % schemes.length
-    nextScheme = schemes[nextSchemeIndex]
-    ipc.send 'setScheme', path.basename nextScheme, '.css'
-    prefs.set 'scheme', nextScheme
-    setScheme nextScheme
-    
-setScheme = (scheme) ->
-    link =$ 'style-link' 
-    newlink = elem 'link', 
-        rel:  'stylesheet'
-        type: 'text/css'
-        href: 'css/'+scheme
-        id:   'style-link'
-    link.parentNode.replaceChild newlink, link
-
 # 000   000  00000000  000   000
 # 000  000   000        000 000 
 # 0000000    0000000     00000  
@@ -365,14 +374,13 @@ setScheme = (scheme) ->
 
 document.onkeydown = (event) ->
     {mod, key, combo} = keyinfo.forEvent event
-    # log mod, key, combo
     if mod in ['', 'shift'] and key.length == 1
         complete key
         return
     switch combo                     
         when 'backspace'             then backspace()
         when 'command+backspace'     then doSearch ''
-        when 'command+i'             then toggleScheme()
+        when 'command+i'             then scheme.toggle()
         when 'esc'                   then cancelSearchOrClose()
         when 'down', 'right'         then select current+1
         when 'up'  , 'left'          then select current-1
@@ -382,6 +390,7 @@ document.onkeydown = (event) ->
         when 'command+-'             then smallerWindow()
         when 'command+r'             then findApps()
         when 'command+h'             then listHistory()
+        when 'command+f'             then openInFinder()
         when 'command+up'            then moveWindow 0,-20
         when 'command+down'          then moveWindow 0, 20
         when 'command+left'          then moveWindow -20, 0
