@@ -205,5 +205,3 @@ app.on 'ready', ->
 
     electron.globalShortcut.register prefs.get('shortcut'), toggleWindow
     
-    # showWindow()
-    
