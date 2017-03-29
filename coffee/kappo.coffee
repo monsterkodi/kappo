@@ -56,7 +56,7 @@ winMain = () ->
     ipc.on 'clearSearch', clearSearch
     ipc.on 'currentApp',  currentApp
 
-    iconDir = resolve "#{__dirname}/../icons"
+    iconDir = resolve "#{electron.remote.app.getPath('userData')}/icons"
     fs.ensureDirSync iconDir
 
     prefs.init()
