@@ -125,7 +125,7 @@ onWinResize = (event) ->
         if b.width != b.height
             b.width = b.height = Math.min b.width, b.height 
             win.setBounds b
-            saveBounds()
+        saveBounds()
     squareTimer = setTimeout adjustSize, 300
     
 showAbout = ->
