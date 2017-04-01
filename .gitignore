@@ -11,3 +11,4 @@ js
 *.html
 *.app
 yarn.lock
+/.idea
