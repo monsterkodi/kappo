@@ -3,30 +3,16 @@
 # 0000000    000000000  00000000   00000000   000   000  
 # 000  000   000   000  000        000        000   000  
 # 000   000  000   000  000        000         0000000   
-{
-encodePath,
-childIndex,
-setStyle,
-resolve,
-keyinfo,
-history,
-scheme,
-clamp,
-prefs,
-elem,
-log,
-pos,
-sw,
-$}           = require 'kxk'
+
+{ encodePath, childIndex, setStyle, resolve, keyinfo, history,
+scheme, clamp, prefs, elem, fs, path, log, pos, sw, $, _
+}            = require 'kxk'
 appIcon      = require './appicon'
 pkg          = require '../package.json'
-_            = require 'lodash'
 childp       = require 'child_process'
-fs           = require 'fs-extra'
 walkdir      = require 'walkdir'
 fuzzy        = require 'fuzzy'
 fuzzaldrin   = require 'fuzzaldrin'
-path         = require 'path'
 electron     = require 'electron'
 clipboard    = electron.clipboard
 browser      = electron.remote.BrowserWindow
@@ -288,7 +274,6 @@ doSearch = (s) ->
     if search.length
         if ps = prefs.get "search:#{search}"
             fuzzied = _.sortBy fuzzied, (o) -> Number.MAX_SAFE_INTEGER - (ps[o.original] ? 0)
-            log 'fuzzied by prefs', fuzzied
     
     results = []
     for f in fuzzied
@@ -372,8 +357,8 @@ toggleWindowSize = -> if win.getBounds().width > 200 then minimizeWindow() else 
 # 000   000  00000000     000   
 
 document.onkeydown = (event) ->
-    {mod, key, combo} = keyinfo.forEvent event
-    if mod in ['', 'shift'] and key.length == 1
+    {mod, key, combo, char} = keyinfo.forEvent event
+    if char?
         complete key
         return
     switch combo                     
