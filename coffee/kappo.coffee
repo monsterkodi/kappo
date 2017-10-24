@@ -1,12 +1,14 @@
-# 000   000   0000000   00000000   00000000    0000000   
-# 000  000   000   000  000   000  000   000  000   000  
-# 0000000    000000000  00000000   00000000   000   000  
-# 000  000   000   000  000        000        000   000  
-# 000   000  000   000  000        000         0000000   
+###
+000   000   0000000   00000000   00000000    0000000   
+000  000   000   000  000   000  000   000  000   000  
+0000000    000000000  00000000   00000000   000   000  
+000  000   000   000  000        000        000   000  
+000   000  000   000  000        000         0000000   
+###
 
-{ encodePath, childIndex, setStyle, resolve, keyinfo, history,
-scheme, clamp, prefs, elem, fs, path, log, pos, sw, $, _
-}            = require 'kxk'
+{   encodePath, childIndex, setStyle, resolve, keyinfo, history, valid, empty, 
+    scheme, clamp, prefs, elem, fs, path, log, pos, sw, $, _ } = require 'kxk' 
+    
 appIcon      = require './appicon'
 pkg          = require '../package.json'
 childp       = require 'child_process'
@@ -357,10 +359,13 @@ toggleWindowSize = -> if win.getBounds().width > 200 then minimizeWindow() else 
 # 000   000  00000000     000   
 
 document.onkeydown = (event) ->
+    
     {mod, key, combo, char} = keyinfo.forEvent event
-    if char?
+    
+    if char? and combo.length == 1
         complete key
         return
+        
     switch combo                     
         when 'backspace'             then backspace()
         when 'command+backspace'     then doSearch ''
