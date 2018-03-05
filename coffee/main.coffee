@@ -301,7 +301,7 @@ findExes = ->
             if foldersLeft == 0
                 sortKeys()
                 # doSearch ''
-                # log 'app search done', apps
+                log "found #{_.size apps} exes"
                 
         walk.on 'file', (file) -> 
             
@@ -309,32 +309,6 @@ findExes = ->
                 name = slash.base file
                 apps[name] = file
                 
-                iconPath = "#{iconDir}/#{name}.png"
-
-                return if slash.isFile iconPath
-                
-                { getIconForPath, ICON_SIZE_LARGE, ICON_SIZE_MEDIUM } = require 'system-icon'
-                    
-                # log 'file:', file
-                
-                getIconForPath file, ICON_SIZE_LARGE, (err, result) ->
-                    if not err?
-                        fs.writeFileSync iconPath, result
-                    else
-                        getIconForPath file, ICON_SIZE_MEDIUM, (err, result) ->
-                            if not err?
-                                # log 'medium', file
-                                fs.writeFileSync iconPath, result
-                            else 
-                                # log "extract", file
-                                extractIcon = require 'win-icon-extractor'
-                                extractIcon(file).then (result) ->
-                                    result = result.slice 'data:image/png;base64,'.length
-                                    try
-                                        fs.writeFileSync iconPath, result, encoding: 'base64'
-                                    catch err
-                                        log "write icon #{iconPath} failed"
-                                                        
 # 00000000  000  000   000  0000000           0000000   0000000  00000000   000  00000000   000000000   0000000  
 # 000       000  0000  000  000   000        000       000       000   000  000  000   000     000     000       
 # 000000    000  000 0 000  000   000        0000000   000       0000000    000  00000000      000     0000000   

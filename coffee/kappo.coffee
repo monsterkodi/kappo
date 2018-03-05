@@ -164,25 +164,23 @@ clearSearch = ->
 # 000   0000000   0000000   000   000
         
 getScriptIcon = (scriptName) -> setIcon scripts[scriptName].img
+
 getAppIcon = (appName) ->
-    iconPath = "#{iconDir}/#{appName}.png"
     
     if slash.win()
-        if slash.isFile iconPath
-            setIcon iconPath
-        else
-            setIcon slash.join __dirname, '..', 'img', 'broken.png'
+        appIcon = require './exeicon'
     else
         appIcon = require './appicon'
-        appIcon.get 
-            appPath: apps[appName]
-            iconDir: iconDir 
-            size:    512
-            cb:      setIcon
+        
+    appIcon.get 
+        appPath: apps[appName]
+        iconDir: iconDir 
+        size:    512
+        cb:      setIcon
 
 setIcon = (iconPath) ->
-    img =$ 'appicon'
-    img.style.backgroundImage = "url(#{slash.fileUrl iconPath})"
+    
+    $('appicon').style.backgroundImage = "url(#{slash.fileUrl iconPath})"
 
 #  0000000  00000000  000      00000000   0000000  000000000  
 # 000       000       000      000       000          000     

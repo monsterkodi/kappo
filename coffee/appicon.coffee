@@ -1,10 +1,12 @@
-# 0000000   00000000   00000000   000   0000000   0000000   000   000  
-#000   000  000   000  000   000  000  000       000   000  0000  000  
-#000000000  00000000   00000000   000  000       000   000  000 0 000  
-#000   000  000        000        000  000       000   000  000  0000  
-#000   000  000        000        000   0000000   0000000   000   000  
+###
+ 0000000   00000000   00000000   000   0000000   0000000   000   000  
+000   000  000   000  000   000  000  000       000   000  0000  000  
+000000000  00000000   00000000   000  000       000   000  000 0 000  
+000   000  000        000        000  000       000   000  000  0000  
+000   000  000        000        000   0000000   0000000   000   000  
+###
 
-{ resolve, childp, log, fs, slash } = require 'kxk'
+{ childp, fs, slash, error, log } = require 'kxk'
 
 plist = require 'simple-plist'
 
@@ -39,7 +41,7 @@ class AppIcon
                 else
                     AppIcon.brokenIcon opt
             else
-                log "[ERROR] getIcon: #{err}"
+                error "getIcon: #{err}"
                 AppIcon.brokenIcon opt
                 
     @saveIcon: (icnsPath, opt) ->
@@ -48,7 +50,7 @@ class AppIcon
             if not err?
                 opt.cb pngPath, opt.cbArg
             else
-                log "[ERROR] saveIcon: #{err}"
+                error "saveIcon: #{err}"
                 AppIcon.brokenIcon opt
      
     @brokenIcon: (opt) ->
