@@ -6,7 +6,7 @@
 000   000  000   000  000  000   000
 ###
 
-{ osascript, about, childp, prefs, slash, log, fs, _ } = require 'kxk'
+{ osascript, walkdir, about, karg, childp, prefs, post, karg, slash, log, fs, _ } = require 'kxk'
 
 pkg           = require '../package.json'
 electron      = require 'electron'
@@ -16,8 +16,20 @@ Tray          = electron.Tray
 Menu          = electron.Menu
 clipboard     = electron.clipboard
 ipc           = electron.ipcMain
+iconDir       = slash.resolve "#{app.getPath('userData')}/icons"
 win           = null
 tray          = null
+
+apps          = {}
+scripts       = {}
+allKeys       = []
+
+args = karg """
+kappo    
+    debug  . ? log debug    . = false . - D
+
+version  #{pkg.version}
+"""
 
 # 000  00000000    0000000
 # 000  000   000  000     
@@ -25,20 +37,29 @@ tray          = null
 # 000  000        000     
 # 000  000         0000000
 
-ipc.on 'cancel', -> activateApp()
-    
+ipc.on  'cancel', -> activateApp()
+
+post.on 'winlog', (text) -> console.log ">>> " + text
+post.onGet 'apps', -> apps: apps, scripts:scripts, allKeys:allKeys
+
 # 0000000    0000000  000000000  000  000   000  00000000
 #000   000  000          000     000  000   000  000     
 #000000000  000          000     000   000 000   0000000 
 #000   000  000          000     000     000     000     
 #000   000   0000000     000     000      0      00000000
 
-appName = null
+appName   = null
 activeApp = null
+activeWin = null
+
 getActiveApp = ->
     
     if slash.win()
-        activeApp = activeWinApp()        
+        activeApp = activeWinApp()
+        appName = activeApp
+        winctl = require 'winctl'
+        activeWin = winctl.GetActiveWindow()
+        log 'activeApp: ', activeApp, activeWin.getHwnd(), activeWin.getTitle()
     else
         activeApp = childp.execSync "#{__dirname}/../bin/appswitch -P"
         
@@ -53,14 +74,17 @@ getActiveApp = ->
 activateApp = ->
             
     if slash.win()
-        log "activate app #{activeApp}"
+        log "activate: #{activeApp} #{activeWin?.getHwnd()} #{activeWin?.getTitle()}"
+        winctl = require 'winctl'
+        activeWin?.showWindow winctl.WindowStates.SHOW
+        activeWin?.setForegroundWindow()
+        win?.hide()
     else
         
         if not activeApp?
             win?.hide()
-            return
-        
-        childp.exec "#{__dirname}/../bin/appswitch -fp #{activeApp}", (err) -> win?.hide()
+        else        
+            childp.exec "#{__dirname}/../bin/appswitch -fp #{activeApp}", (err) -> win?.hide()
 
 activeWinApp = ->
     
@@ -80,15 +104,16 @@ activeWinApp = ->
 toggleWindow = ->
     
     if win?.isVisible()
-        activateApp()   
+        activateApp()
     else
-        if not win?
-            createWindow()
+        if slash.win()
+            if not win?
+                createWindow()
+            else
+                getActiveApp()
+                win.show()
+                win.focus()
         else
-            win.show()
-            win.focus()
-            
-        if not slash.win()
             script = osascript """
             tell application "System Events"
                 set n to name of first application process whose frontmost is true
@@ -97,7 +122,13 @@ toggleWindow = ->
             """
             name = childp.execSync "osascript #{script}"
             appName = String(name).trim()
-        getActiveApp()
+            
+            if not win?
+                createWindow()
+            else
+                getActiveApp()
+                win.show()
+                win.focus()            
 
 reloadWindow = -> win.webContents.reloadIgnoringCache()
 
@@ -132,7 +163,9 @@ createWindow = ->
     win.on 'resize', onWinResize
     win.on 'move',   saveBounds
     win.on 'ready-to-show', -> 
-        # win.webContents.openDevTools()
+        getActiveApp()
+        if args.debug
+            win.webContents.openDevTools()
         win.show()
     win
 
@@ -225,4 +258,134 @@ app.on 'ready', ->
     prefs.init shortcut: 'F1'
 
     electron.globalShortcut.register prefs.get('shortcut'), toggleWindow
+
+    fs.ensureDirSync iconDir
+    
+    if slash.win()
+        findExes()
+    else
+        findScripts()
+        findApps()
+    
+sortKeys = ->
+    
+    allKeys = Object.keys(apps).concat Object.keys(scripts)
+    allKeys.sort (a,b) -> a.toLowerCase().localeCompare b.toLowerCase() 
+
+# 00000000  000  000   000  0000000          00000000  000   000  00000000   0000000  
+# 000       000  0000  000  000   000        000        000 000   000       000       
+# 000000    000  000 0 000  000   000        0000000     00000    0000000   0000000   
+# 000       000  000  0000  000   000        000        000 000   000            000  
+# 000       000  000   000  0000000          00000000  000   000  00000000  0000000   
+
+findExes = ->
+    
+    apps['cmd']      = "C:/Windows/System32/cmd.exe"
+    apps['calc']     = "C:/Windows/System32/calc.exe"
+    apps['regedit']  = "C:/Windows/regedit.exe"
+    apps['explorer'] = "C:/Windows/explorer.exe"
+    
+    exeFolders  = [ "C:/Program Files", "C:/Program Files (x86)", "C:/Users/kodi/s" ]
+    exeFolders  = exeFolders.concat prefs.get 'dirs', []
+    foldersLeft = exeFolders.length
+    
+    for exeFolder in exeFolders
+        walkOpt = prefs.get 'walk', no_recurse: false, max_depth: 3 
+        walk = walkdir slash.resolve(exeFolder), walkOpt
+        
+        walk.on 'error', (err) -> log "[ERROR] findExes -- #{err}"
+        
+        walk.on 'end', -> 
+            
+            foldersLeft -= 1 
+            if foldersLeft == 0
+                sortKeys()
+                # doSearch ''
+                # log 'app search done', apps
+                
+        walk.on 'file', (file) -> 
+            
+            if slash.ext(file) == 'exe'
+                name = slash.base file
+                apps[name] = file
+                
+                iconPath = "#{iconDir}/#{name}.png"
+
+                return if slash.isFile iconPath
+                
+                { getIconForPath, ICON_SIZE_LARGE, ICON_SIZE_MEDIUM } = require 'system-icon'
+                    
+                # log 'file:', file
+                
+                getIconForPath file, ICON_SIZE_LARGE, (err, result) ->
+                    if not err?
+                        fs.writeFileSync iconPath, result
+                    else
+                        getIconForPath file, ICON_SIZE_MEDIUM, (err, result) ->
+                            if not err?
+                                # log 'medium', file
+                                fs.writeFileSync iconPath, result
+                            else 
+                                # log "extract", file
+                                extractIcon = require 'win-icon-extractor'
+                                extractIcon(file).then (result) ->
+                                    result = result.slice 'data:image/png;base64,'.length
+                                    try
+                                        fs.writeFileSync iconPath, result, encoding: 'base64'
+                                    catch err
+                                        log "write icon #{iconPath} failed"
+                                                        
+# 00000000  000  000   000  0000000           0000000   0000000  00000000   000  00000000   000000000   0000000  
+# 000       000  0000  000  000   000        000       000       000   000  000  000   000     000     000       
+# 000000    000  000 0 000  000   000        0000000   000       0000000    000  00000000      000     0000000   
+# 000       000  000  0000  000   000             000  000       000   000  000  000           000          000  
+# 000       000  000   000  0000000          0000000    0000000  000   000  000  000           000     0000000   
+
+findScripts = () ->
+    scripts = 
+        sleep:
+            exec:   "pmset sleepnow"
+            img:    "#{__dirname}/../scripts/sleep.png"
+        shutdown:
+            exec:   "osascript -e 'tell app \"System Events\" to shut down'" 
+            img:    "#{__dirname}/../scripts/shutdown.png"
+        restart:
+            exec:   "osascript -e 'tell app \"System Events\" to restart'"
+            img:    "#{__dirname}/../scripts/restart.png"
+            
+    if prefs.get 'confirmShutdown'
+        scripts.shutdown.exec = "osascript -e 'tell app \"loginwindow\" to «event aevtrsdn»'"
+    if prefs.get 'confirmRestart'
+        scripts.restart.exec = "osascript -e 'tell app \"loginwindow\" to «event aevtrrst»'"
+    
+# 00000000  000  000   000  0000000           0000000   00000000   00000000    0000000  
+# 000       000  0000  000  000   000        000   000  000   000  000   000  000       
+# 000000    000  000 0 000  000   000        000000000  00000000   00000000   0000000   
+# 000       000  000  0000  000   000        000   000  000        000             000  
+# 000       000  000   000  0000000          000   000  000        000        0000000   
+
+findApps = ->
+    
+    apps['Finder'] = "/System/Library/CoreServices/Finder.app"
+    appFolders = [
+        "/Applications"
+        "/Applications/Utilities"
+        ]
+    appFolders = appFolders.concat prefs.get 'dirs', []
+    foldersLeft = appFolders.length
+    
+    for appFolder in appFolders
+        walkOpt = prefs.get 'walk', no_recurse: true
+        walk = walkdir slash.resolve(appFolder), walkOpt
+        walk.on 'error', (err) -> log "[ERROR] findApps -- #{err}"
+        walk.on 'end', -> 
+            foldersLeft -= 1 
+            if foldersLeft == 0
+                sortKeys()
+                # doSearch ''
+        walk.on 'directory', (dir) -> 
+            if slash.ext(dir) == 'app'
+                name = slash.base dir
+                apps[name] = dir
+    
     

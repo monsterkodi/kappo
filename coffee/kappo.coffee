@@ -6,8 +6,8 @@
 000   000  000   000  000        000         0000000   
 ###
 
-{ childIndex, setStyle, keyinfo, history, valid, empty, walkdir, childp, 
-  scheme, clamp, prefs, elem, fs, slash, log, pos, sw, $, _ } = require 'kxk' 
+{ childIndex, setStyle, keyinfo, history, valid, empty, childp, 
+  scheme, clamp, prefs, post, elem, fs, slash, log, pos, sw, $, _ } = require 'kxk' 
     
 pkg          = require '../package.json'
 fuzzy        = require 'fuzzy'
@@ -17,7 +17,7 @@ clipboard    = electron.clipboard
 browser      = electron.remote.BrowserWindow
 ipc          = electron.ipcRenderer
 win          = electron.remote.getCurrentWindow()
-iconDir      = null
+iconDir      = slash.resolve "#{electron.remote.app.getPath('userData')}/icons"
 appHist      = null
 results      = []
 apps         = {}
@@ -26,6 +26,11 @@ allKeys      = []
 search       = ''
 currentName  = ''
 current      = 0
+
+post.on 'slog', (text) -> 
+    
+    console.log 'slog', text
+    post.toMain 'winlog', text
 
 # 000   000  000  000   000  00     00   0000000   000  000   000  
 # 000 0 000  000  0000  000  000   000  000   000  000  0000  000  
@@ -40,125 +45,17 @@ winMain = () ->
     ipc.on 'clearSearch', clearSearch
     ipc.on 'currentApp',  currentApp
 
-    iconDir = slash.resolve "#{electron.remote.app.getPath('userData')}/icons"
-    fs.ensureDirSync iconDir
-
     prefs.init()
+    
+    { apps, scripts, allKeys } = post.get 'apps'
+    
+    # log 'winMain', allKeys
     
     appHist = new history 
         list:      prefs.get 'history', []
         maxLength: prefs.get 'maxHistoryLength', 10
         
     scheme.set prefs.get 'scheme', 'bright'
-    if slash.win()
-        findExes()
-    else
-        findScripts()
-        findApps()
-    
-sortKeys = ->
-    
-    allKeys = Object.keys(apps).concat Object.keys(scripts)
-    allKeys.sort (a,b) -> a.toLowerCase().localeCompare b.toLowerCase() 
-
-# 00000000  000  000   000  0000000          00000000  000   000  00000000   0000000  
-# 000       000  0000  000  000   000        000        000 000   000       000       
-# 000000    000  000 0 000  000   000        0000000     00000    0000000   0000000   
-# 000       000  000  0000  000   000        000        000 000   000            000  
-# 000       000  000   000  0000000          00000000  000   000  00000000  0000000   
-
-findExes = ->
-    
-    apps['cmd']      = "C:/Windows/System32/cmd.exe"
-    apps['calc']     = "C:/Windows/System32/calc.exe"
-    apps['regedit']  = "C:/Windows/regedit.exe"
-    apps['explorer'] = "C:/Windows/explorer.exe"
-    
-    exeFolders  = [ "C:/Program Files", "C:/Program Files (x86)" ]
-    exeFolders  = exeFolders.concat prefs.get 'dirs', []
-    foldersLeft = exeFolders.length
-    
-    for exeFolder in exeFolders
-        walkOpt = prefs.get 'walk', no_recurse: false, max_depth: 3 
-        walk = walkdir slash.resolve(exeFolder), walkOpt
-        
-        walk.on 'error', (err) -> log "[ERROR] findExes -- #{err}"
-        
-        walk.on 'end', -> 
-            
-            foldersLeft -= 1 
-            if foldersLeft == 0
-                sortKeys()
-                doSearch ''
-                
-        walk.on 'file', (file) -> 
-            
-            if slash.ext(file) == 'exe'
-                name = slash.base file
-                apps[name] = file
-                
-                iconPath = "#{iconDir}/#{name}.png"
-                if not slash.isFile iconPath
-                    extractIcon = require 'win-icon-extractor'
-                    extractIcon(file).then (result) ->
-                        result = result.slice 'data:image/png;base64,'.length
-                        try
-                            fs.writeFileSync iconPath, result, encoding: 'base64'
-                        catch err
-                            log "write icon #{iconPath} failed"
-    
-# 00000000  000  000   000  0000000           0000000   0000000  00000000   000  00000000   000000000   0000000  
-# 000       000  0000  000  000   000        000       000       000   000  000  000   000     000     000       
-# 000000    000  000 0 000  000   000        0000000   000       0000000    000  00000000      000     0000000   
-# 000       000  000  0000  000   000             000  000       000   000  000  000           000          000  
-# 000       000  000   000  0000000          0000000    0000000  000   000  000  000           000     0000000   
-
-findScripts = () ->
-    scripts = 
-        sleep:
-            exec:   "pmset sleepnow"
-            img:    "#{__dirname}/../scripts/sleep.png"
-        shutdown:
-            exec:   "osascript -e 'tell app \"System Events\" to shut down'" 
-            img:    "#{__dirname}/../scripts/shutdown.png"
-        restart:
-            exec:   "osascript -e 'tell app \"System Events\" to restart'"
-            img:    "#{__dirname}/../scripts/restart.png"
-            
-    if prefs.get 'confirmShutdown'
-        scripts.shutdown.exec = "osascript -e 'tell app \"loginwindow\" to «event aevtrsdn»'"
-    if prefs.get 'confirmRestart'
-        scripts.restart.exec = "osascript -e 'tell app \"loginwindow\" to «event aevtrrst»'"
-    
-# 00000000  000  000   000  0000000           0000000   00000000   00000000    0000000  
-# 000       000  0000  000  000   000        000   000  000   000  000   000  000       
-# 000000    000  000 0 000  000   000        000000000  00000000   00000000   0000000   
-# 000       000  000  0000  000   000        000   000  000        000             000  
-# 000       000  000   000  0000000          000   000  000        000        0000000   
-
-findApps = ->
-    
-    apps['Finder'] = "/System/Library/CoreServices/Finder.app"
-    appFolders = [
-        "/Applications"
-        "/Applications/Utilities"
-        ]
-    appFolders = appFolders.concat prefs.get 'dirs', []
-    foldersLeft = appFolders.length
-    
-    for appFolder in appFolders
-        walkOpt = prefs.get 'walk', no_recurse: true
-        walk = walkdir slash.resolve(appFolder), walkOpt
-        walk.on 'error', (err) -> log "[ERROR] findApps -- #{err}"
-        walk.on 'end', -> 
-            foldersLeft -= 1 
-            if foldersLeft == 0
-                sortKeys()
-                doSearch ''
-        walk.on 'directory', (dir) -> 
-            if slash.ext(dir) == 'app'
-                name = slash.base dir
-                apps[name] = dir
 
 #  0000000   00000000   00000000  000   000  
 # 000   000  000   000  000       0000  000  
@@ -172,11 +69,19 @@ openCurrent = ->
         prefs.set "search:#{search}:#{currentName}", 1 + prefs.get "search:#{search}:#{currentName}", 0
         
     if currentIsApp()
+        
         appHist.add currentName
         prefs.set 'history', appHist.list
         if slash.win()
-            childp.exec "\"#{apps[currentName]}\"", (err) -> 
-                if err? then log "[ERROR] can't exec #{apps[currentName]} #{err}"
+
+            winctl = require 'winctl'
+            winctl.
+            
+            
+            subprocess = childp.spawn "\"#{apps[currentName]}\"", [], detached: true, stdio: 'ignore', shell: true
+            subprocess.on 'error', (err) -> 
+                log 'Failed to start subprocess.'
+            
         else
             childp.exec "open -a \"#{apps[currentName]}\"", (err) -> 
                 if err? then log "[ERROR] can't open #{apps[currentName]} #{err}"
@@ -184,6 +89,10 @@ openCurrent = ->
         childp.exec scripts[currentName].exec, (err) -> 
             if err? then log "[ERROR] can't execute script #{scripts[currentName]}: #{err}"
 
+doBlackList = ->
+    
+    log 'doBlackList', currentName
+            
 #  0000000  000   000  00000000   00000000   00000000  000   000  000000000  
 # 000       000   000  000   000  000   000  000       0000  000     000     
 # 000       000   000  0000000    0000000    0000000   000 0 000     000     
@@ -191,6 +100,9 @@ openCurrent = ->
 #  0000000   0000000   000   000  000   000  00000000  000   000     000     
 
 currentApp = (e, appName) ->
+    
+    log 'currentApp', appName
+    
     if currentName.toLowerCase() == appName.toLowerCase() and appHist.previous()
         doSearch appHist.previous()
         clearSearch()
@@ -231,6 +143,9 @@ openInFinder = () ->
 #  0000000  0000000  00000000  000   000  000   000  
 
 clearSearch = ->
+    
+    log 'clearSearch'
+    
     if results.length
         search = ''
         results = [results[Math.min current, results.length-1]]
@@ -253,7 +168,6 @@ getAppIcon = (appName) ->
     iconPath = "#{iconDir}/#{appName}.png"
     
     if slash.win()
-        # log "getAppIcon #{appName}", iconPath
         if slash.isFile iconPath
             setIcon iconPath
         else
@@ -357,7 +271,11 @@ doSearch = (s) ->
 complete  = (key) -> doSearch search + key
 backspace =       -> doSearch search.substr 0, search.length-1
 
-cancelSearchOrClose = -> if search.length then doSearch '' else ipc.send 'cancel'
+cancelSearchOrClose = -> 
+    if search.length 
+        doSearch '' 
+    else
+        ipc.send 'cancel'
 
 clickID = downID = 0
 window.onmousedown = (e) -> clickID += 1 ; downID = clickID
@@ -427,7 +345,10 @@ document.onkeydown = (event) ->
         complete key
         return
         
-    switch combo                     
+    # log 'combo', combo
+        
+    switch combo    
+        when 'delete'                                       then doBlackList()
         when 'backspace'                                    then backspace()
         when 'command+backspace',       'ctrl+backspace'    then doSearch ''
         when 'command+i', 'ctrl+i'                          then scheme.toggle()
