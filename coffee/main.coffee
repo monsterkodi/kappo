@@ -1,20 +1,15 @@
-# 00     00   0000000   000  000   000
-# 000   000  000   000  000  0000  000
-# 000000000  000000000  000  000 0 000
-# 000 0 000  000   000  000  000  0000
-# 000   000  000   000  000  000   000
-{
-osascript,
-about,
-prefs,
-log,
-}             = require 'kxk'
+###
+00     00   0000000   000  000   000
+000   000  000   000  000  0000  000
+000000000  000000000  000  000 0 000
+000 0 000  000   000  000  000  0000
+000   000  000   000  000  000   000
+###
+
+{ osascript, about, childp, prefs, slash, log, fs, _ } = require 'kxk'
+
 pkg           = require '../package.json'
-childp        = require 'child_process'
 electron      = require 'electron'
-path          = require 'path'
-fs            = require 'fs-extra'
-_             = require 'lodash'
 app           = electron.app
 BrowserWindow = electron.BrowserWindow
 Tray          = electron.Tray
@@ -23,7 +18,6 @@ clipboard     = electron.clipboard
 ipc           = electron.ipcMain
 win           = null
 tray          = null
-debug         = false
 
 # 000  00000000    0000000
 # 000  000   000  000     
@@ -42,7 +36,12 @@ ipc.on 'cancel', -> activateApp()
 appName = null
 activeApp = null
 getActiveApp = ->
-    activeApp = childp.execSync "#{__dirname}/../bin/appswitch -P"
+    
+    if slash.win()
+        activeApp = activeWinApp()        
+    else
+        activeApp = childp.execSync "#{__dirname}/../bin/appswitch -P"
+        
     if win?
         if appName?
             win.webContents.send 'currentApp', appName 
@@ -52,11 +51,26 @@ getActiveApp = ->
         createWindow()
 
 activateApp = ->
-    if not activeApp?
-        win?.hide()
-        return
-    childp.exec "#{__dirname}/../bin/appswitch -fp #{activeApp}", (err) -> win?.hide()
+            
+    if slash.win()
+        log "activate app #{activeApp}"
+    else
+        
+        if not activeApp?
+            win?.hide()
+            return
+        
+        childp.exec "#{__dirname}/../bin/appswitch -fp #{activeApp}", (err) -> win?.hide()
 
+activeWinApp = ->
+    
+    activeWin = require 'active-win'
+    winInfo = activeWin.sync()
+
+    if winInfo?.owner?
+        return slash.base winInfo.owner.name
+    return null
+    
 #000   000  000  000   000  0000000     0000000   000   000
 #000 0 000  000  0000  000  000   000  000   000  000 0 000
 #000000000  000  000 0 000  000   000  000   000  000000000
@@ -64,6 +78,7 @@ activateApp = ->
 #00     00  000  000   000  0000000     0000000   00     00
 
 toggleWindow = ->
+    
     if win?.isVisible()
         activateApp()   
     else
@@ -72,14 +87,16 @@ toggleWindow = ->
         else
             win.show()
             win.focus()
-        script = osascript """
-        tell application "System Events"
-            set n to name of first application process whose frontmost is true
-        end tell
-        do shell script "echo " & n
-        """
-        name = childp.execSync "osascript #{script}"
-        appName = String(name).trim()
+            
+        if not slash.win()
+            script = osascript """
+            tell application "System Events"
+                set n to name of first application process whose frontmost is true
+            end tell
+            do shell script "echo " & n
+            """
+            name = childp.execSync "osascript #{script}"
+            appName = String(name).trim()
         getActiveApp()
 
 reloadWindow = -> win.webContents.reloadIgnoringCache()
@@ -87,7 +104,9 @@ reloadWindow = -> win.webContents.reloadIgnoringCache()
 showWindow = -> getActiveApp()
     
 createWindow = ->
+    
     return if win?
+    
     win = new BrowserWindow
         width:           300
         height:          300
@@ -112,7 +131,9 @@ createWindow = ->
     win.on 'closed', -> win = null
     win.on 'resize', onWinResize
     win.on 'move',   saveBounds
-    win.on 'ready-to-show', -> win.show()
+    win.on 'ready-to-show', -> 
+        # win.webContents.openDevTools()
+        win.show()
     win
 
 saveBounds = -> if win? then prefs.set 'bounds', win.getBounds()
@@ -153,7 +174,7 @@ app.on 'ready', ->
 
     tray = new Tray "#{__dirname}/../img/menu.png"
     tray.on 'click', toggleWindow
-    app.dock.hide() if app.dock
+    app.dock?.hide()
     
     # 00     00  00000000  000   000  000   000
     # 000   000  000       0000  000  000   000
@@ -165,13 +186,13 @@ app.on 'ready', ->
         label: app.getName()
         submenu: [
             label: "About #{pkg.name}"
-            accelerator: 'Command+.'
+            accelerator: 'CmdOrCtrl+.'
             click: -> showAbout()
         ,            
             type: 'separator'
         ,
             label: 'Quit'
-            accelerator: 'Command+Q'
+            accelerator: 'CmdOrCtrl+Q'
             click: -> 
                 saveBounds()
                 app.exit 0
@@ -186,17 +207,17 @@ app.on 'ready', ->
         label: 'Window'
         submenu: [
             label:       'Close Window'
-            accelerator: 'Cmd+W'
+            accelerator: 'CmdOrCtrl+W'
             click:       -> win?.close()
         ,
             type: 'separator'
         ,                            
             label:       'Reload Window'
-            accelerator: 'Ctrl+Alt+Cmd+L'
+            accelerator: 'CmdOrCtrl+Alt+L'
             click:       -> reloadWindow()
         ,                
             label:       'Toggle DevTools'
-            accelerator: 'Cmd+Alt+I'
+            accelerator: 'CmdOrCtrl+Alt+I'
             click:       -> win?.webContents.openDevTools()
         ]
     ]

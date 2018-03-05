@@ -4,17 +4,16 @@
 #000   000  000        000        000  000       000   000  000  0000  
 #000   000  000        000        000   0000000   0000000   000   000  
 
-{ resolve, log, fs, path
-}         = require 'kxk'
-plist     = require 'simple-plist'
-childp    = require 'child_process'
+{ resolve, childp, log, fs, slash } = require 'kxk'
+
+plist = require 'simple-plist'
 
 class AppIcon
     
     @cache = {}
     
     @pngPath: (opt) ->
-        resolve path.join opt.iconDir, path.basename(opt.appPath, path.extname(opt.appPath)) + ".png"
+        slash.resolve slash.join opt.iconDir, slash.base(opt.appPath) + ".png"
 
     @get: (opt) ->
         pngPath = AppIcon.pngPath opt
@@ -30,12 +29,12 @@ class AppIcon
          
     @getIcon: (opt) ->
         appPath = opt.appPath
-        infoPath = path.join appPath, 'Contents', 'Info.plist'
+        infoPath = slash.join appPath, 'Contents', 'Info.plist'
         plist.readFile infoPath, (err, obj) ->
             if not err?
                 if obj['CFBundleIconFile']?
-                    icnsPath = path.join path.dirname(infoPath), 'Resources', obj['CFBundleIconFile']
-                    icnsPath += ".icns" if not icnsPath.endsWith '.icns'
+                    icnsPath = slash.join slash.dirname(infoPath), 'Resources', obj['CFBundleIconFile']
+                    icnsPath += ".icns" if not icnsslash.endsWith '.icns'
                     AppIcon.saveIcon icnsPath, opt
                 else
                     AppIcon.brokenIcon opt
@@ -53,7 +52,7 @@ class AppIcon
                 AppIcon.brokenIcon opt
      
     @brokenIcon: (opt) ->
-        brokenPath = path.join __dirname, '..', 'img', 'broken.png'
+        brokenPath = slash.join __dirname, '..', 'img', 'broken.png'
         opt.cb brokenPath, opt.cbArg
         
 module.exports = AppIcon

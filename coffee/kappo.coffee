@@ -6,13 +6,10 @@
 000   000  000   000  000        000         0000000   
 ###
 
-{   encodePath, childIndex, setStyle, resolve, keyinfo, history, valid, empty, 
-    scheme, clamp, prefs, elem, fs, path, log, pos, sw, $, _ } = require 'kxk' 
+{ childIndex, setStyle, keyinfo, history, valid, empty, walkdir, childp, 
+  scheme, clamp, prefs, elem, fs, slash, log, pos, sw, $, _ } = require 'kxk' 
     
-appIcon      = require './appicon'
 pkg          = require '../package.json'
-childp       = require 'child_process'
-walkdir      = require 'walkdir'
 fuzzy        = require 'fuzzy'
 fuzzaldrin   = require 'fuzzaldrin'
 electron     = require 'electron'
@@ -43,7 +40,7 @@ winMain = () ->
     ipc.on 'clearSearch', clearSearch
     ipc.on 'currentApp',  currentApp
 
-    iconDir = resolve "#{electron.remote.app.getPath('userData')}/icons"
+    iconDir = slash.resolve "#{electron.remote.app.getPath('userData')}/icons"
     fs.ensureDirSync iconDir
 
     prefs.init()
@@ -53,18 +50,68 @@ winMain = () ->
         maxLength: prefs.get 'maxHistoryLength', 10
         
     scheme.set prefs.get 'scheme', 'bright'
-    findScripts()
-    findApps()
+    if slash.win()
+        findExes()
+    else
+        findScripts()
+        findApps()
     
 sortKeys = ->
+    
     allKeys = Object.keys(apps).concat Object.keys(scripts)
     allKeys.sort (a,b) -> a.toLowerCase().localeCompare b.toLowerCase() 
 
-#  0000000   0000000  00000000   000  00000000   000000000   0000000  
-# 000       000       000   000  000  000   000     000     000       
-# 0000000   000       0000000    000  00000000      000     0000000   
-#      000  000       000   000  000  000           000          000  
-# 0000000    0000000  000   000  000  000           000     0000000   
+# 00000000  000  000   000  0000000          00000000  000   000  00000000   0000000  
+# 000       000  0000  000  000   000        000        000 000   000       000       
+# 000000    000  000 0 000  000   000        0000000     00000    0000000   0000000   
+# 000       000  000  0000  000   000        000        000 000   000            000  
+# 000       000  000   000  0000000          00000000  000   000  00000000  0000000   
+
+findExes = ->
+    
+    apps['cmd']      = "C:/Windows/System32/cmd.exe"
+    apps['calc']     = "C:/Windows/System32/calc.exe"
+    apps['regedit']  = "C:/Windows/regedit.exe"
+    apps['explorer'] = "C:/Windows/explorer.exe"
+    
+    exeFolders  = [ "C:/Program Files", "C:/Program Files (x86)" ]
+    exeFolders  = exeFolders.concat prefs.get 'dirs', []
+    foldersLeft = exeFolders.length
+    
+    for exeFolder in exeFolders
+        walkOpt = prefs.get 'walk', no_recurse: false, max_depth: 3 
+        walk = walkdir slash.resolve(exeFolder), walkOpt
+        
+        walk.on 'error', (err) -> log "[ERROR] findExes -- #{err}"
+        
+        walk.on 'end', -> 
+            
+            foldersLeft -= 1 
+            if foldersLeft == 0
+                sortKeys()
+                doSearch ''
+                
+        walk.on 'file', (file) -> 
+            
+            if slash.ext(file) == 'exe'
+                name = slash.base file
+                apps[name] = file
+                
+                iconPath = "#{iconDir}/#{name}.png"
+                if not slash.isFile iconPath
+                    extractIcon = require 'win-icon-extractor'
+                    extractIcon(file).then (result) ->
+                        result = result.slice 'data:image/png;base64,'.length
+                        try
+                            fs.writeFileSync iconPath, result, encoding: 'base64'
+                        catch err
+                            log "write icon #{iconPath} failed"
+    
+# 00000000  000  000   000  0000000           0000000   0000000  00000000   000  00000000   000000000   0000000  
+# 000       000  0000  000  000   000        000       000       000   000  000  000   000     000     000       
+# 000000    000  000 0 000  000   000        0000000   000       0000000    000  00000000      000     0000000   
+# 000       000  000  0000  000   000             000  000       000   000  000  000           000          000  
+# 000       000  000   000  0000000          0000000    0000000  000   000  000  000           000     0000000   
 
 findScripts = () ->
     scripts = 
@@ -83,13 +130,14 @@ findScripts = () ->
     if prefs.get 'confirmRestart'
         scripts.restart.exec = "osascript -e 'tell app \"loginwindow\" to «event aevtrrst»'"
     
-# 00000000  000  000   000  0000000     0000000   00000000   00000000    0000000  
-# 000       000  0000  000  000   000  000   000  000   000  000   000  000       
-# 000000    000  000 0 000  000   000  000000000  00000000   00000000   0000000   
-# 000       000  000  0000  000   000  000   000  000        000             000  
-# 000       000  000   000  0000000    000   000  000        000        0000000   
+# 00000000  000  000   000  0000000           0000000   00000000   00000000    0000000  
+# 000       000  0000  000  000   000        000   000  000   000  000   000  000       
+# 000000    000  000 0 000  000   000        000000000  00000000   00000000   0000000   
+# 000       000  000  0000  000   000        000   000  000        000             000  
+# 000       000  000   000  0000000          000   000  000        000        0000000   
 
 findApps = ->
+    
     apps['Finder'] = "/System/Library/CoreServices/Finder.app"
     appFolders = [
         "/Applications"
@@ -100,17 +148,17 @@ findApps = ->
     
     for appFolder in appFolders
         walkOpt = prefs.get 'walk', no_recurse: true
-        walk = walkdir resolve(appFolder), walkOpt
-        walk.on 'error', (err) -> log "[ERROR] #{err}"
+        walk = walkdir slash.resolve(appFolder), walkOpt
+        walk.on 'error', (err) -> log "[ERROR] findApps -- #{err}"
         walk.on 'end', -> 
             foldersLeft -= 1 
             if foldersLeft == 0
                 sortKeys()
                 doSearch ''
         walk.on 'directory', (dir) -> 
-            if path.extname(dir) == '.app'
-                name = path.basename dir, '.app'
-                apps[name] = dir 
+            if slash.ext(dir) == 'app'
+                name = slash.base dir
+                apps[name] = dir
 
 #  0000000   00000000   00000000  000   000  
 # 000   000  000   000  000       0000  000  
@@ -124,10 +172,14 @@ openCurrent = ->
         prefs.set "search:#{search}:#{currentName}", 1 + prefs.get "search:#{search}:#{currentName}", 0
         
     if currentIsApp()
-        appHist.add currentName 
+        appHist.add currentName
         prefs.set 'history', appHist.list
-        childp.exec "open -a \"#{apps[currentName]}\"", (err) -> 
-            if err? then log "[ERROR] can't open #{apps[currentName]} #{err}"
+        if slash.win()
+            childp.exec "\"#{apps[currentName]}\"", (err) -> 
+                if err? then log "[ERROR] can't exec #{apps[currentName]} #{err}"
+        else
+            childp.exec "open -a \"#{apps[currentName]}\"", (err) -> 
+                if err? then log "[ERROR] can't open #{apps[currentName]} #{err}"
     else
         childp.exec scripts[currentName].exec, (err) -> 
             if err? then log "[ERROR] can't execute script #{scripts[currentName]}: #{err}"
@@ -199,15 +251,24 @@ clearSearch = ->
 getScriptIcon = (scriptName) -> setIcon scripts[scriptName].img
 getAppIcon = (appName) ->
     iconPath = "#{iconDir}/#{appName}.png"
-    appIcon.get 
-        appPath: apps[appName]
-        iconDir: iconDir 
-        size:    512
-        cb: setIcon
+    
+    if slash.win()
+        # log "getAppIcon #{appName}", iconPath
+        if slash.isFile iconPath
+            setIcon iconPath
+        else
+            setIcon slash.join __dirname, '..', 'img', 'broken.png'
+    else
+        appIcon = require './appicon'
+        appIcon.get 
+            appPath: apps[appName]
+            iconDir: iconDir 
+            size:    512
+            cb:      setIcon
 
 setIcon = (iconPath) ->
     img =$ 'appicon'
-    img.style.backgroundImage = "url(file://#{encodePath iconPath})"
+    img.style.backgroundImage = "url(#{slash.fileUrl iconPath})"
 
 #  0000000  00000000  000      00000000   0000000  000000000  
 # 000       000       000      000       000          000     
@@ -360,31 +421,31 @@ toggleWindowSize = -> if win.getBounds().width > 200 then minimizeWindow() else 
 
 document.onkeydown = (event) ->
     
-    {mod, key, combo, char} = keyinfo.forEvent event
+    { mod, key, combo, char } = keyinfo.forEvent event
     
     if char? and combo.length == 1
         complete key
         return
         
     switch combo                     
-        when 'backspace'             then backspace()
-        when 'command+backspace'     then doSearch ''
-        when 'command+i'             then scheme.toggle()
-        when 'esc'                   then cancelSearchOrClose()
-        when 'down', 'right'         then select current+1
-        when 'up'  , 'left'          then select current-1
-        when 'enter'                 then openCurrent()
-        when 'command+alt+i'         then win.webContents.openDevTools()
-        when 'command+='             then biggerWindow()
-        when 'command+-'             then smallerWindow()
-        when 'command+r'             then findApps()
-        when 'command+h'             then listHistory()
-        when 'command+f'             then openInFinder()
-        when 'command+up'            then moveWindow 0,-20
-        when 'command+down'          then moveWindow 0, 20
-        when 'command+left'          then moveWindow -20, 0
-        when 'command+right'         then moveWindow  20, 0
-        when 'command+0','command+o' then toggleWindowSize()
+        when 'backspace'                                    then backspace()
+        when 'command+backspace',       'ctrl+backspace'    then doSearch ''
+        when 'command+i', 'ctrl+i'                          then scheme.toggle()
+        when 'esc'                                          then cancelSearchOrClose()
+        when 'down', 'right'                                then select current+1
+        when 'up'  , 'left'                                 then select current-1
+        when 'enter'                                        then openCurrent()
+        when 'command+alt+i',           'ctrl+alt+i'        then win.webContents.openDevTools()
+        when 'command+=',               'ctrl+='            then biggerWindow()
+        when 'command+-',               'ctrl+-'            then smallerWindow()
+        when 'command+r',               'ctrl+r'            then findApps()
+        when 'command+h',               'ctrl+h'            then listHistory()
+        when 'command+f',               'ctrl+f'            then openInFinder()
+        when 'command+up',              'ctrl+up'           then moveWindow 0,-20
+        when 'command+down',            'ctrl+down'         then moveWindow 0, 20
+        when 'command+left',            'ctrl+left'         then moveWindow -20, 0
+        when 'command+right',           'ctrl+right'        then moveWindow  20, 0
+        when 'command+0','command+o',   'ctrl+0','ctrl+o'   then toggleWindowSize()
 
 winMain()
 
