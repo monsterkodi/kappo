@@ -1,3 +1,10 @@
+###
+000   000  000  000   000  000      000   0000000  000000000  
+000 0 000  000  0000  000  000      000  000          000     
+000000000  000  000 0 000  000      000  0000000      000     
+000   000  000  000  0000  000      000       000     000     
+00     00  000  000   000  0000000  000  0000000      000     
+###
 
 { slash, empty, log } = require 'kxk'
 
@@ -5,21 +12,17 @@
 
 kernel32 = K.load()
 user32   = U.load()
-W        = windef
 
 ffi   = require 'ffi'
 ref   = require 'ref'
 wchar = require 'ref-wchar'
 
-
 kernel = new ffi.Library 'kernel32',
-    OpenProcess: ['pointer', ['uint32', 'int', 'uint32']]
-    CloseHandle: ['int', ['pointer']]
-    QueryFullProcessImageNameW: ['int', ['pointer', 'uint32', 'pointer', 'pointer']]
+    OpenProcess:                ['pointer', ['uint32', 'int', 'uint32']]
+    CloseHandle:                ['int',     ['pointer']]
+    QueryFullProcessImageNameW: ['int',     ['pointer', 'uint32', 'pointer', 'pointer']]
 
-windows = []
-
-enumWindowsProc = ffi.Callback W.BOOL, [W.HWND, W.LPARAM], (hWnd, lParam) ->
+winList = ->
         
     winID      = ref.address hWnd
     
@@ -48,56 +51,21 @@ enumWindowsProc = ffi.Callback W.BOOL, [W.HWND, W.LPARAM], (hWnd, lParam) ->
     if not user32.IsWindowVisible hWnd
         return 1
         
-    windows.push
-        winID:    winID
-        procID:   procID
-        threadID: threadID
-        path:     procPath
-        title:    winTitle
+        procPath = slash.path wchar.toString ref.reinterpretUntilZeros textBuffer, wchar.size
         
-    return 1
+        kernel.CloseHandle procHandle
+                
+        windows.push
+            hwnd:     hWnd
+            winID:    winID
+            procID:   procID
+            threadID: threadID
+            path:     procPath
+            title:    winTitle
+            
+        return 1
     
-getWindows = ->
-
-    windows = []
-    user32.EnumWindows enumWindowsProc, 2
+    user32.EnumWindows enumProc, 0
     windows
         
-module.exports = getWindows
-
-#       var keydownCtrl = new KeybdInput()
-#       keydownCtrl.type = 1
-#       keydownCtrl.wVk = 0x0011
-#       keydownCtrl.wScan = 0
-#       keydownCtrl.dwFlags = 0x0000
-#       keydownCtrl.time = 0
-#       keydownCtrl.dwExtraInfo = 0
-#   
-#       var keyupCtrl = new KeybdInput()
-#       keyupCtrl.type = 1
-#       keyupCtrl.wVk = 0x0011
-#       keyupCtrl.wScan = 0
-#       keyupCtrl.dwFlags = 0x0002
-#       keyupCtrl.time = 0
-#       keyupCtrl.dwExtraInfo = 0
-#   
-#       var keydownV = new KeybdInput()
-#       keydownV.type = 1
-#       keydownV.wVk = 0x0056
-#       keydownV.wScan = 0
-#       keydownV.dwFlags = 0x0000
-#       keydownV.time = 0
-#       keydownV.dwExtraInfo = 0
-#   
-#       var keyupV = new KeybdInput()
-#       keyupV.type = 1
-#       keyupV.wVk = 0x0056
-#       keyupV.wScan = 0
-#       keyupV.dwFlags = 0x0002
-#       keyupV.time = 0
-   # keyupV.dwExtraInfo = 0
-
-   # var r1 = user32.SendInput (1, keydownCtrl.ref() , 28)
-#             var r2 = user32.SendInput (1, keydownV.ref() , 28)
-#             var r3 = user32.SendInput (1, keyupV.ref() , 28)
-#             var r4 = user32.SendInput (1, keyupCtrl.ref() , 28)
+module.exports = winList
