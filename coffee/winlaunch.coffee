@@ -10,58 +10,67 @@
 winList = require './winlist'
 ffi   = require 'ffi'
 
-{ U } = require 'win32-api'
-
-user32 = U.load()
-userFF = new ffi.Library 'user32',
-    SetForegroundWindow: ['int', ['pointer']]
-    SetActiveWindow:     ['int', ['pointer']]
-
-foreground = (winID) ->
+user = new ffi.Library 'user32',
+    SetForegroundWindow:      ['int',  ['pointer']]
+    SetActiveWindow:          ['int',  ['pointer']]
+    BringWindowToTop:         ['int',  ['pointer']]
+    ShowWindow:               ['int',  ['pointer', 'uint32']]
+    SwitchToThisWindow:       ['void', ['pointer', 'int']]
+    GetForegroundWindow:      ['pointer', []]
+    GetWindowThreadProcessId: ['uint32', ['pointer', 'pointer']]
+    AttachThreadInput:        ['int', ['uint32', 'uint32', 'int']]
+    SetWindowPos:             ['int', ['pointer', 'pointer', 'int', 'int', 'int', 'int', 'uint32']]
+    SetFocus:                 ['pointer', ['pointer']]
+    SystemParametersInfoW:    ['int', ['uint32', 'uint32', 'pointer', 'uint32']]
+    keybd_event:              ['void', ['byte', 'char', 'uint32', 'pointer']]
     
-    winctl = require 'winctl'
-                          
-    winctl.FindWindows (w) -> 
-        if winID == w.getHwnd() 
-            log 'foreground', winID
-            w.showWindow winctl.WindowStates.SHOW
-            w.setForegroundWindow()
-            false
-        true
+kernel = new ffi.Library 'kernel32',
+    GetCurrentThreadId:       ['uint32', []]
     
 winLaunch = (exePath) ->
     
-    list = winList()
-    
-    log "winLaunch #{exePath} #{list.length}", list
-    
     focusWins = []
+
+    user.SystemParametersInfoW 0x2001,0,null,1
     
-    for win in list
+    for win in winList()
         
         if win.path == exePath
             
-            log "-------- foreground for #{exePath}", win.path
+            log "-------- foreground #{win.visible} #{win.ownerID} #{win.winID} #{exePath} :: #{win.title} "
   
-            foreground win.winID
-            # r = user32.ShowWindow win.hwnd, 9 # SW_RESTORE
-            # s = user32.ShowWindow win.hwnd, 5 # SW_SHOW
-            # f = userFF.SetForegroundWindow win.hwnd
-            # a = userFF.SetActiveWindow win.hwnd
-            
-            focusWins.push win
-            # log "shown", r, s, f, a
+            if win.visible and not win.ownerID and win.title
+
+                VK_MENU    = 0x12 # ALT key
+                SW_RESTORE = 9
+                KEYDOWN    = 1
+                KEYUP      = 3
+                
+                user.keybd_event VK_MENU, 0, KEYDOWN, null # fake ALT press to enable foreground switch
+                user.SetForegroundWindow win.hwnd          # no wonder windows is so bad
+                user.keybd_event VK_MENU, 0, KEYUP, null
+                
+                # hCurWnd = user.GetForegroundWindow()
+                # dwMyID  = kernel.GetCurrentThreadId()
+                # dwCurID = user.GetWindowThreadProcessId hCurWnd, null
+#                 
+                # user.AttachThreadInput   dwCurID, dwMyID, true
+                # user.ShowWindow win.hwnd, SW_RESTORE
+                # user.SetForegroundWindow win.hwnd
+                # user.AttachThreadInput   dwCurID, dwMyID, false
+                
+                focusWins.push win
             
     if not empty focusWins
         
-        return focusWins: focusWins
+        return focusWins:focusWins
         
-    log "start #{exePath}"
+    log "+++++++++ start #{exePath}"
 
     subprocess = childp.spawn "\"#{exePath}\"", [], detached: true, stdio: 'ignore', shell: true
     subprocess.on 'error', (err) ->
         error 'winLaunch -- failed to start subprocess.'
         
-    return subprocess: subprocess
+    return subprocess:subprocess
 
 module.exports = winLaunch

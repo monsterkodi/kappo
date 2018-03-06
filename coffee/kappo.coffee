@@ -76,47 +76,9 @@ openCurrent = ->
         if slash.win()
 
             launch = require './winlaunch'
-            
+             
             if launch apps[currentName]
-                log 'launched', currentName
                 win.hide()
-            
-            # getWindows = require './winlist'
-            # winlist = getWindows()
-#             
-            # log "winlist #{winlist.length}", winlist
-#             
-            # winctl = require 'winctl'
-#                 
-            # winFinder = (w) -> 
-#                 
-                # for wl in winlist
-                    # if wl.winID == w.getHwnd() 
-                        # # log apps[currentName], wl.path
-                        # if wl.path == apps[currentName]
-                            # log 'FOUND! WINID', wl
-#                             
-                            # # w.showWindow winctl.WindowStates.SHOW
-                            # # w.setForegroundWindow()
-#                             
-                            # return false
-                # return true
-#                 
-            # winctl.FindWindows(winFinder).then (wins) ->
-                # log 'find returned', wins.length
-
-            # wbyn = require 'get-window-by-name'
-            # log 'byname:', wbyn.getWindowText(currentName)
-                
-            # activeWin = require 'active-win'
-            # winInfo = activeWin.sync()
-#         
-            # if winInfo?.owner?
-                # return slash.base winInfo.owner.name
-            
-            # subprocess = childp.spawn "\"#{apps[currentName]}\"", [], detached: true, stdio: 'ignore', shell: true
-            # subprocess.on 'error', (err) ->
-                # log 'Failed to start subprocess.'
 
         else
             childp.exec "open -a \"#{apps[currentName]}\"", (err) ->

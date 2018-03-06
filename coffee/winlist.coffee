@@ -8,14 +8,18 @@
 
 { slash, empty, log } = require 'kxk'
 
-{ U, K, conf, types, windef } = require 'win32-api'
-
-kernel32 = K.load()
-user32   = U.load()
-
 ffi   = require 'ffi'
 ref   = require 'ref'
 wchar = require 'ref-wchar'
+
+user = new ffi.Library 'User32.dll',
+    GetForegroundWindow:        ['pointer', []]
+    GetWindow:                  ['pointer', ['pointer', 'uint32']]
+    GetWindowTextW:             ['int',     ['pointer', 'pointer', 'int']]
+    GetWindowTextLengthW:       ['int',     ['pointer']]
+    GetWindowThreadProcessId:   ['uint32',  ['pointer', 'uint32 *']]
+    IsWindowVisible:            ['int',     ['pointer']]
+    EnumWindows:                ['int',     ['pointer', 'pointer']]
 
 kernel = new ffi.Library 'kernel32',
     OpenProcess:                ['pointer', ['uint32', 'int', 'uint32']]
@@ -23,49 +27,56 @@ kernel = new ffi.Library 'kernel32',
     QueryFullProcessImageNameW: ['int',     ['pointer', 'uint32', 'pointer', 'pointer']]
 
 winList = ->
+     
+    windows = []
+    
+    enumProc = ffi.Callback 'int', ['pointer', 'pointer'], (hWnd, lParam) ->
+    
+        ownerID = ref.address user.GetWindow hWnd, 4 # GW_OWNER
+        if ownerID
+            return 1
+  
+        visible = user.IsWindowVisible hWnd
+        if not visible
+            return 1
         
-    winID      = ref.address hWnd
-    
-    textBuffer = Buffer.alloc 10000
-    user32.GetWindowTextW hWnd, textBuffer, 5000
-    winTitle   = wchar.toString ref.reinterpretUntilZeros textBuffer, wchar.size
-    
-    if empty winTitle
-        return 1
-    
-    procBuffer = ref.alloc 'uint32'
-    threadID   = user32.GetWindowThreadProcessId hWnd, procBuffer
-    procID     = ref.get procBuffer
-    
-    procHandle = kernel.OpenProcess 0x1000, false, procID
-    textLength = ref.alloc 'uint32', 5000
-    kernel.QueryFullProcessImageNameW procHandle, 0, textBuffer, textLength
-    
-    procPath = slash.path wchar.toString ref.reinterpretUntilZeros textBuffer, wchar.size
-    
-    kernel.CloseHandle procHandle
-    
-    if ref.address user32.GetWindow hWnd, 4 # GW_OWNER
-        return 1
+        winID = ref.address hWnd
         
-    if not user32.IsWindowVisible hWnd
-        return 1
+        titleLength = user.GetWindowTextLengthW(hWnd)+2
+        titleBuffer = Buffer.alloc titleLength * 2
+        user.GetWindowTextW hWnd, titleBuffer, titleLength
+        titleClean = ref.reinterpretUntilZeros titleBuffer, wchar.size
+        title      = wchar.toString titleClean
         
-        procPath = slash.path wchar.toString ref.reinterpretUntilZeros textBuffer, wchar.size
+        # if empty title
+            # return 1
+        
+        procBuffer = ref.alloc 'uint32'
+        threadID   = user.GetWindowThreadProcessId hWnd, procBuffer
+        procID     = ref.get procBuffer
+        
+        procHandle = kernel.OpenProcess 0x1000, false, procID
+        pathBuffer = Buffer.alloc 10000
+        pathLength = ref.alloc 'uint32', 5000
+        kernel.QueryFullProcessImageNameW procHandle, 0, pathBuffer, pathLength
+        pathString = wchar.toString ref.reinterpretUntilZeros pathBuffer, wchar.size
+        path       = pathString and slash.path(pathString) or ''
         
         kernel.CloseHandle procHandle
                 
         windows.push
             hwnd:     hWnd
+            title:    title
+            visible:  visible
+            ownerID:  ownerID
             winID:    winID
             procID:   procID
             threadID: threadID
-            path:     procPath
-            title:    winTitle
+            path:     path
             
         return 1
     
-    user32.EnumWindows enumProc, 0
+    user.EnumWindows enumProc, null
     windows
         
 module.exports = winList
