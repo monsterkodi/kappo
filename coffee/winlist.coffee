@@ -1,5 +1,69 @@
 
-{ slash, log } = require 'kxk'
+{ slash, empty, log } = require 'kxk'
+
+{ U, K, conf, types, windef } = require 'win32-api'
+
+kernel32 = K.load()
+user32   = U.load()
+W        = windef
+
+ffi   = require 'ffi'
+ref   = require 'ref'
+wchar = require 'ref-wchar'
+
+
+kernel = new ffi.Library 'kernel32',
+    OpenProcess: ['pointer', ['uint32', 'int', 'uint32']]
+    CloseHandle: ['int', ['pointer']]
+    QueryFullProcessImageNameW: ['int', ['pointer', 'uint32', 'pointer', 'pointer']]
+
+windows = []
+
+enumWindowsProc = ffi.Callback W.BOOL, [W.HWND, W.LPARAM], (hWnd, lParam) ->
+        
+    winID      = ref.address hWnd
+    
+    textBuffer = Buffer.alloc 10000
+    user32.GetWindowTextW hWnd, textBuffer, 5000
+    winTitle   = wchar.toString ref.reinterpretUntilZeros textBuffer, wchar.size
+    
+    if empty winTitle
+        return 1
+    
+    procBuffer = ref.alloc 'uint32'
+    threadID   = user32.GetWindowThreadProcessId hWnd, procBuffer
+    procID     = ref.get procBuffer
+    
+    procHandle = kernel.OpenProcess 0x1000, false, procID
+    textLength = ref.alloc 'uint32', 5000
+    kernel.QueryFullProcessImageNameW procHandle, 0, textBuffer, textLength
+    
+    procPath = slash.path wchar.toString ref.reinterpretUntilZeros textBuffer, wchar.size
+    
+    kernel.CloseHandle procHandle
+    
+    if ref.address user32.GetWindow hWnd, 4 # GW_OWNER
+        return 1
+        
+    if not user32.IsWindowVisible hWnd
+        return 1
+        
+    windows.push
+        winID:    winID
+        procID:   procID
+        threadID: threadID
+        path:     procPath
+        title:    winTitle
+        
+    return 1
+    
+getWindows = ->
+
+    windows = []
+    user32.EnumWindows enumWindowsProc, 2
+    windows
+        
+module.exports = getWindows
 
 #       var keydownCtrl = new KeybdInput()
 #       keydownCtrl.type = 1
@@ -37,63 +101,3 @@
 #             var r2 = user32.SendInput (1, keydownV.ref() , 28)
 #             var r3 = user32.SendInput (1, keyupV.ref() , 28)
 #             var r4 = user32.SendInput (1, keyupCtrl.ref() , 28)
-
-{ U, K, conf, types, windef } = require 'win32-api'
-
-kernel32 = K.load()
-user32   = U.load()
-W        = windef
-
-ffi   = require 'ffi'
-ref   = require 'ref'
-wchar = require 'ref-wchar'
-
-
-kernel = new ffi.Library 'kernel32',
-    OpenProcess: ['pointer', ['uint32', 'int', 'uint32']]
-    CloseHandle: ['int', ['pointer']]
-    QueryFullProcessImageNameW: ['int', ['pointer', 'uint32', 'pointer', 'pointer']]
-
-windows = []
-
-enumWindowsProc = ffi.Callback W.BOOL, [W.HWND, W.LPARAM], (hWnd, lParam) ->
-        
-    winID = ref.address hWnd
-    
-    textBuffer = Buffer.alloc 10000
-    user32.GetWindowTextW hWnd, textBuffer, 5000
-    winTitle   = wchar.toString ref.reinterpretUntilZeros textBuffer, wchar.size
-    
-    procBuffer = ref.alloc 'uint32'
-    threadID   = user32.GetWindowThreadProcessId hWnd, procBuffer
-    procID     = ref.get procBuffer
-    
-    procHandle = kernel.OpenProcess 0x1000, false, procID
-    textLength = ref.alloc 'uint32', 5000
-    kernel.QueryFullProcessImageNameW procHandle, 0, textBuffer, textLength
-    
-    procPath = slash.path wchar.toString ref.reinterpretUntilZeros textBuffer, wchar.size
-    
-    kernel.CloseHandle procHandle
-    
-    windows.push
-        winID:    winID
-        procID:   procID
-        threadID: threadID
-        path:     procPath
-        title:    winTitle
-        
-    return 1
-    
-getWindows = ->
-
-    windows = []
-    r = user32.EnumWindows enumWindowsProc, 2
-    log 'enumWindows:', r, windows.length
-    # for w in windows
-        # log "id: #{w.procID} path: #{w.procPath} title: #{w.title}"
-    # user32.EnumWindows.async enumWindowsProc, 0, (err) -> 
-        # log 'getWindows', err, windows.length
-    return windows
-        
-module.exports = getWindows

@@ -77,24 +77,26 @@ openCurrent = ->
             getWindows = require './winlist'
             winlist = getWindows()
             
+            log "winlist #{winlist.length}", winlist
+            
             winctl = require 'winctl'
                 
             winFinder = (w) -> 
                 
                 for wl in winlist
                     if wl.winID == w.getHwnd() 
-                        log apps[currentName], wl.path
+                        # log apps[currentName], wl.path
                         if wl.path == apps[currentName]
                             log 'FOUND! WINID', wl
                             
-                            w.showWindow winctl.WindowStates.SHOW
-                            w.setForegroundWindow()
+                            # w.showWindow winctl.WindowStates.SHOW
+                            # w.setForegroundWindow()
                             
                             return false
                 return true
                 
-            winctl.FindWindows(winFinder).then (windows) ->
-                log 'find returned', windows.length
+            winctl.FindWindows(winFinder).then (wins) ->
+                log 'find returned', wins.length
 
             # wbyn = require 'get-window-by-name'
             # log 'byname:', wbyn.getWindowText(currentName)

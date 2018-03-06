@@ -284,7 +284,9 @@ findExes = ->
     apps['calc']     = "C:/Windows/System32/calc.exe"
     apps['regedit']  = "C:/Windows/regedit.exe"
     apps['explorer'] = "C:/Windows/explorer.exe"
+    
     apps['fish']     = "C:/msys64/fish.lnk"
+    apps['mintty']   = "C:/msys64/usr/bin/mintty.exe"
 
     exeFolders  = [ "C:/Program Files", "C:/Program Files (x86)" ]
     exeFolders  = exeFolders.concat prefs.get 'dirs', []
