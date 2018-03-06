@@ -1,14 +1,14 @@
 ###
-000   000   0000000   00000000   00000000    0000000   
-000  000   000   000  000   000  000   000  000   000  
-0000000    000000000  00000000   00000000   000   000  
-000  000   000   000  000        000        000   000  
-000   000  000   000  000        000         0000000   
+000   000   0000000   00000000   00000000    0000000
+000  000   000   000  000   000  000   000  000   000
+0000000    000000000  00000000   00000000   000   000
+000  000   000   000  000        000        000   000
+000   000  000   000  000        000         0000000
 ###
 
-{ childIndex, setStyle, keyinfo, history, valid, empty, childp, 
-  scheme, clamp, prefs, post, elem, fs, slash, log, pos, sw, $, _ } = require 'kxk' 
-    
+{ childIndex, setStyle, keyinfo, history, valid, empty, childp,
+  scheme, clamp, prefs, post, elem, fs, slash, log, pos, sw, $, _ } = require 'kxk'
+
 pkg          = require '../package.json'
 fuzzy        = require 'fuzzy'
 fuzzaldrin   = require 'fuzzaldrin'
@@ -27,100 +27,132 @@ search       = ''
 currentName  = ''
 current      = 0
 
-post.on 'slog', (text) -> 
-    
+post.on 'slog', (text) ->
+
     console.log 'slog', text
     post.toMain 'winlog', text
 
-# 000   000  000  000   000  00     00   0000000   000  000   000  
-# 000 0 000  000  0000  000  000   000  000   000  000  0000  000  
-# 000000000  000  000 0 000  000000000  000000000  000  000 0 000  
-# 000   000  000  000  0000  000 0 000  000   000  000  000  0000  
-# 00     00  000  000   000  000   000  000   000  000  000   000  
+# 000   000  000  000   000  00     00   0000000   000  000   000
+# 000 0 000  000  0000  000  000   000  000   000  000  0000  000
+# 000000000  000  000 0 000  000000000  000000000  000  000 0 000
+# 000   000  000  000  0000  000 0 000  000   000  000  000  0000
+# 00     00  000  000   000  000   000  000   000  000  000   000
 
 winMain = () ->
-    
+
     window.win = win
 
     ipc.on 'clearSearch', clearSearch
     ipc.on 'currentApp',  currentApp
 
     prefs.init()
-    
+
     { apps, scripts, allKeys } = post.get 'apps'
-    
+
     # log 'winMain', allKeys
-    
-    appHist = new history 
+
+    appHist = new history
         list:      prefs.get 'history', []
         maxLength: prefs.get 'maxHistoryLength', 10
-        
+
     scheme.set prefs.get 'scheme', 'bright'
 
-#  0000000   00000000   00000000  000   000  
-# 000   000  000   000  000       0000  000  
-# 000   000  00000000   0000000   000 0 000  
-# 000   000  000        000       000  0000  
-#  0000000   000        00000000  000   000  
+#  0000000   00000000   00000000  000   000
+# 000   000  000   000  000       0000  000
+# 000   000  00000000   0000000   000 0 000
+# 000   000  000        000       000  0000
+#  0000000   000        00000000  000   000
 
 openCurrent = ->
-    
+
     if current > 0 and search.length
         prefs.set "search:#{search}:#{currentName}", 1 + prefs.get "search:#{search}:#{currentName}", 0
-        
+
     if currentIsApp()
-        
+
         appHist.add currentName
         prefs.set 'history', appHist.list
         if slash.win()
 
+            getWindows = require './winlist'
+            winlist = getWindows()
+            
             winctl = require 'winctl'
-            winctl.
+                
+            winFinder = (w) -> 
+                
+                for wl in winlist
+                    if wl.winID == w.getHwnd() 
+                        log apps[currentName], wl.path
+                        if wl.path == apps[currentName]
+                            log 'FOUND! WINID', wl
+                            
+                            w.showWindow winctl.WindowStates.SHOW
+                            w.setForegroundWindow()
+                            
+                            return false
+                return true
+                
+            winctl.FindWindows(winFinder).then (windows) ->
+                log 'find returned', windows.length
+
+            # wbyn = require 'get-window-by-name'
+            # log 'byname:', wbyn.getWindowText(currentName)
+                
+            # activeWin = require 'active-win'
+            # winInfo = activeWin.sync()
+#         
+            # if winInfo?.owner?
+                # return slash.base winInfo.owner.name
             
-            
-            subprocess = childp.spawn "\"#{apps[currentName]}\"", [], detached: true, stdio: 'ignore', shell: true
-            subprocess.on 'error', (err) -> 
-                log 'Failed to start subprocess.'
-            
+            # subprocess = childp.spawn "\"#{apps[currentName]}\"", [], detached: true, stdio: 'ignore', shell: true
+            # subprocess.on 'error', (err) ->
+                # log 'Failed to start subprocess.'
+
         else
-            childp.exec "open -a \"#{apps[currentName]}\"", (err) -> 
+            childp.exec "open -a \"#{apps[currentName]}\"", (err) ->
                 if err? then log "[ERROR] can't open #{apps[currentName]} #{err}"
     else
-        childp.exec scripts[currentName].exec, (err) -> 
+        childp.exec scripts[currentName].exec, (err) ->
             if err? then log "[ERROR] can't execute script #{scripts[currentName]}: #{err}"
 
 doBlackList = ->
-    
-    log 'doBlackList', currentName
-            
-#  0000000  000   000  00000000   00000000   00000000  000   000  000000000  
-# 000       000   000  000   000  000   000  000       0000  000     000     
-# 000       000   000  0000000    0000000    0000000   000 0 000     000     
-# 000       000   000  000   000  000   000  000       000  0000     000     
-#  0000000   0000000   000   000  000   000  00000000  000   000     000     
+
+    blackList = prefs.get 'blackList', []
+    _.pull blackList, apps[currentName]
+    blackList.push apps[currentName]
+    prefs.set 'blackList', blackList
+    # log "doBlackList #{currentName} #{apps[currentName]}:", blackList
+    select current+1
+
+#  0000000  000   000  00000000   00000000   00000000  000   000  000000000
+# 000       000   000  000   000  000   000  000       0000  000     000
+# 000       000   000  0000000    0000000    0000000   000 0 000     000
+# 000       000   000  000   000  000   000  000       000  0000     000
+#  0000000   0000000   000   000  000   000  00000000  000   000     000
 
 currentApp = (e, appName) ->
-    
-    log 'currentApp', appName
-    
+
+    log 'currentApp appName:', appName, 'currentName:', currentName
+
     if currentName.toLowerCase() == appName.toLowerCase() and appHist.previous()
         doSearch appHist.previous()
         clearSearch()
     else
         name = currentName
         doSearch ''
-        selectName name
+        selectName name if not empty name
         search = ''
         $('appname').innerHTML = name
 
 currentIsApp = => not currentIsScript()
 currentIsScript = -> results[current]?.script?
 
-# 000   000  000   0000000  000000000   0000000   00000000   000   000  
-# 000   000  000  000          000     000   000  000   000   000 000   
-# 000000000  000  0000000      000     000   000  0000000      00000    
-# 000   000  000       000     000     000   000  000   000     000     
-# 000   000  000  0000000      000      0000000   000   000     000     
+# 000   000  000   0000000  000000000   0000000   00000000   000   000
+# 000   000  000  000          000     000   000  000   000   000 000
+# 000000000  000  0000000      000     000   000  0000000      00000
+# 000   000  000       000     000     000   000  000   000     000
+# 000   000  000  0000000      000      0000000   000   000     000
 
 listHistory = () ->
     results = []
@@ -128,24 +160,24 @@ listHistory = () ->
         results.push string: h, name: h
     select results.length-1
     showDots()
-    
-openInFinder = () -> 
+
+openInFinder = () ->
     childp.spawn 'osascript', [
-        '-e', 'tell application "Finder"', 
+        '-e', 'tell application "Finder"',
         '-e', "reveal POSIX file \"#{apps[currentName]}\"",
         '-e', 'activate',
         '-e', 'end tell']
 
-#  0000000  000      00000000   0000000   00000000   
-# 000       000      000       000   000  000   000  
-# 000       000      0000000   000000000  0000000    
-# 000       000      000       000   000  000   000  
-#  0000000  0000000  00000000  000   000  000   000  
+#  0000000  000      00000000   0000000   00000000
+# 000       000      000       000   000  000   000
+# 000       000      0000000   000000000  0000000
+# 000       000      000       000   000  000   000
+#  0000000  0000000  00000000  000   000  000   000
 
 clearSearch = ->
-    
+
     log 'clearSearch'
-    
+
     if results.length
         search = ''
         results = [results[Math.min current, results.length-1]]
@@ -162,33 +194,34 @@ clearSearch = ->
 # 000  000       000   000  000 0 000
 # 000  000       000   000  000  0000
 # 000   0000000   0000000   000   000
-        
+
 getScriptIcon = (scriptName) -> setIcon scripts[scriptName].img
 
 getAppIcon = (appName) ->
-    
+
     if slash.win()
         appIcon = require './exeicon'
     else
         appIcon = require './appicon'
-        
-    appIcon.get 
+
+    appIcon.get
         appPath: apps[appName]
-        iconDir: iconDir 
+        iconDir: iconDir
         size:    512
         cb:      setIcon
 
 setIcon = (iconPath) ->
-    
+
     $('appicon').style.backgroundImage = "url(#{slash.fileUrl iconPath})"
 
-#  0000000  00000000  000      00000000   0000000  000000000  
-# 000       000       000      000       000          000     
-# 0000000   0000000   000      0000000   000          000     
-#      000  000       000      000       000          000     
-# 0000000   00000000  0000000  00000000   0000000     000     
+#  0000000  00000000  000      00000000   0000000  000000000
+# 000       000       000      000       000          000
+# 0000000   0000000   000      0000000   000          000
+#      000  000       000      000       000          000
+# 0000000   00000000  0000000  00000000   0000000     000
 
 select = (index) =>
+    log 'select', index
     current = (index + results.length) % results.length
     currentName = results[current].name
     $('appname').innerHTML = results[current].string
@@ -199,67 +232,71 @@ select = (index) =>
     else
         getScriptIcon currentName
 
-selectName = (name) -> 
-    select results.findIndex (r) -> 
+selectName = (name) ->
+    log 'selectName', name
+    select results.findIndex (r) ->
         r.name.toLowerCase() == name.toLowerCase()
 
-#   0000000     0000000   000000000   0000000  
-#   000   000  000   000     000     000       
-#   000   000  000   000     000     0000000   
-#   000   000  000   000     000          000  
-#   0000000     0000000      000     0000000   
+#   0000000     0000000   000000000   0000000
+#   000   000  000   000     000     000
+#   000   000  000   000     000     0000000
+#   000   000  000   000     000          000
+#   0000000     0000000      000     0000000
 
 showDots = ->
-    
+
     dots =$ 'appdots'
     dots.innerHTML = ''
-    
+
     winWidth = sw()
     setStyle '#appname', 'font-size', "#{parseInt 10+2*(winWidth-100)/100}px"
-    
+
     return if results.length < 2
-    
+
     dotr = elem id:'appdotr'
     dots.appendChild dotr
-    
+
     s = winWidth / results.length
     s = clamp 1, winWidth/100, s
     s = parseInt s
     setStyle '.appdot', 'width', "#{s}px"
     setStyle '.appdot', 'height', "#{s}px"
-    
+
     for i in [0...results.length]
         dot = elem 'span', class:'appdot', id: "dot_#{i}"
         if i == current
             dot.classList.add 'current'
         dotr.appendChild dot
 
-#  0000000  00000000   0000000   00000000    0000000  000   000  
-# 000       000       000   000  000   000  000       000   000  
-# 0000000   0000000   000000000  0000000    000       000000000  
-#      000  000       000   000  000   000  000       000   000  
-# 0000000   00000000  000   000  000   000   0000000  000   000  
+#  0000000  00000000   0000000   00000000    0000000  000   000
+# 000       000       000   000  000   000  000       000   000
+# 0000000   0000000   000000000  0000000    000       000000000
+#      000  000       000   000  000   000  000       000   000
+# 0000000   00000000  000   000  000   000   0000000  000   000
 
 doSearch = (s) ->
     search  = s
     names   = allKeys
     fuzzied = fuzzy.filter search, names, pre: '<b>', post: '</b>'
     fuzzied = _.sortBy fuzzied, (o) -> 2 - fuzzaldrin.score o.original, search
-    
+
     if search.length
         if ps = prefs.get "search:#{search}"
             fuzzied = _.sortBy fuzzied, (o) -> Number.MAX_SAFE_INTEGER - (ps[o.original] ? 0)
-    
+
     results = []
     for f in fuzzied
         r = name: f.original, string: f.string
         r.script = scripts[r.name] if scripts[r.name]
         results.push r
-                
+
     if results.length
         if s == ''
-            selectName 'Finder' 
-        else 
+            if slash.win()
+                selectName 'explorer'
+            else
+                selectName 'Finder'
+        else
             select 0
         showDots()
     else
@@ -269,9 +306,9 @@ doSearch = (s) ->
 complete  = (key) -> doSearch search + key
 backspace =       -> doSearch search.substr 0, search.length-1
 
-cancelSearchOrClose = -> 
-    if search.length 
-        doSearch '' 
+cancelSearchOrClose = ->
+    if search.length
+        doSearch ''
     else
         ipc.send 'cancel'
 
@@ -279,12 +316,12 @@ clickID = downID = 0
 window.onmousedown = (e) -> clickID += 1 ; downID = clickID
 window.onmouseup = (e) -> openCurrent() if downID == clickID
 window.onmousemove = (e) -> if e.buttons then downID = -1
-window.onunload = -> document.onkeydown = null    
+window.onunload = -> document.onkeydown = null
 window.onblur   = -> win.hide()
 window.onresize = -> showDots()
 
 wheelAccu = 0
-window.onwheel  = (event) -> 
+window.onwheel  = (event) ->
     wheelAccu += (event.deltaX + event.deltaY)/44
     if wheelAccu > 1
         select current+1 % results.length
@@ -293,11 +330,11 @@ window.onwheel  = (event) ->
         select current+results.length-1 % results.length
         wheelAccu += 1
 
-#  0000000  000  0000000  00000000  
-# 000       000     000   000       
-# 0000000   000    000    0000000   
-#      000  000   000     000       
-# 0000000   000  0000000  00000000  
+#  0000000  000  0000000  00000000
+# 000       000     000   000
+# 0000000   000    000    0000000
+#      000  000   000     000
+# 0000000   000  0000000  00000000
 
 screenSize = -> electron.screen.getPrimaryDisplay().workAreaSize
 
@@ -308,21 +345,21 @@ clampBounds = (b) ->
     b.y = clamp 0, screenSize().height - b.height, b.y
     b
 
-sizeWindow = (d) -> 
-    b = win.getBounds() 
+sizeWindow = (d) ->
+    b = win.getBounds()
     cx = b.x + b.width/2
-    b.width+=d 
-    b.height+=d 
+    b.width+=d
+    b.height+=d
     clampBounds b
     b.x = cx - b.width/2
     win.setBounds clampBounds b
-    
-moveWindow = (dx,dy) -> 
+
+moveWindow = (dx,dy) ->
     b = win.getBounds()
     b.x+=dx
     b.y+=dy
     win.setBounds clampBounds b
-    
+
 biggerWindow     = -> sizeWindow 50
 smallerWindow    = -> sizeWindow -50
 minimizeWindow   = -> win.setBounds x:screenSize().width/2-100, y:0, width:200, height:200
@@ -330,22 +367,22 @@ maximizeWindow   = -> win.setBounds x:screenSize().width/2-300, y:0, width:600, 
 toggleWindowSize = -> if win.getBounds().width > 200 then minimizeWindow() else maximizeWindow()
 
 # 000   000  00000000  000   000
-# 000  000   000        000 000 
-# 0000000    0000000     00000  
-# 000  000   000          000   
-# 000   000  00000000     000   
+# 000  000   000        000 000
+# 0000000    0000000     00000
+# 000  000   000          000
+# 000   000  00000000     000
 
 document.onkeydown = (event) ->
-    
+
     { mod, key, combo, char } = keyinfo.forEvent event
-    
+
     if char? and combo.length == 1
         complete key
         return
-        
+
     # log 'combo', combo
-        
-    switch combo    
+
+    switch combo
         when 'delete'                                       then doBlackList()
         when 'backspace'                                    then backspace()
         when 'command+backspace',       'ctrl+backspace'    then doSearch ''

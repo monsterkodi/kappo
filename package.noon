@@ -19,12 +19,17 @@ bugs
                 url  https://github.com/monsterkodi/kappo/issues
 dependencies
                 active-win      ^3.0.0
+                ffi             ^2.2.0
                 fuzzaldrin      ^2.1.0
                 fuzzy           ^0.1.3
+                get-window-by-name  ^1.0.2
                 kxk             ^0.34.0
                 opener          ^1.4.3
+                ref             ^1.3.5
+                ref-wchar       ^1.0.2
                 system-icon     ^0.1.1
                 win-icon-extractor  ^1.0.4
+                win32-api       ^1.11.0
                 winctl          ^1.0.2
 optionalDependencies
                 simple-plist  ^0.2.1

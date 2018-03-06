@@ -25,27 +25,27 @@ scripts       = {}
 allKeys       = []
 
 args = karg """
-kappo    
+kappo
     debug  . ? log debug    . = false . - D
 
 version  #{pkg.version}
 """
 
 # 000  00000000    0000000
-# 000  000   000  000     
-# 000  00000000   000     
-# 000  000        000     
+# 000  000   000  000
+# 000  00000000   000
+# 000  000        000
 # 000  000         0000000
 
 ipc.on  'cancel', -> activateApp()
 
-post.on 'winlog', (text) -> console.log ">>> " + text
+post.on 'winlog', (text) -> log ">>> " + text
 post.onGet 'apps', -> apps: apps, scripts:scripts, allKeys:allKeys
 
 # 0000000    0000000  000000000  000  000   000  00000000
-#000   000  000          000     000  000   000  000     
-#000000000  000          000     000   000 000   0000000 
-#000   000  000          000     000     000     000     
+#000   000  000          000     000  000   000  000
+#000000000  000          000     000   000 000   0000000
+#000   000  000          000     000     000     000
 #000   000   0000000     000     000      0      00000000
 
 appName   = null
@@ -53,7 +53,7 @@ activeApp = null
 activeWin = null
 
 getActiveApp = ->
-    
+
     if slash.win()
         activeApp = activeWinApp()
         appName = activeApp
@@ -62,17 +62,17 @@ getActiveApp = ->
         log 'activeApp: ', activeApp, activeWin.getHwnd(), activeWin.getTitle()
     else
         activeApp = childp.execSync "#{__dirname}/../bin/appswitch -P"
-        
+
     if win?
         if appName?
-            win.webContents.send 'currentApp', appName 
+            win.webContents.send 'currentApp', appName
         else
-            win.webContents.send 'clearSearch'            
+            win.webContents.send 'clearSearch'
     else
         createWindow()
 
 activateApp = ->
-            
+
     if slash.win()
         log "activate: #{activeApp} #{activeWin?.getHwnd()} #{activeWin?.getTitle()}"
         winctl = require 'winctl'
@@ -80,21 +80,21 @@ activateApp = ->
         activeWin?.setForegroundWindow()
         win?.hide()
     else
-        
+
         if not activeApp?
             win?.hide()
-        else        
+        else
             childp.exec "#{__dirname}/../bin/appswitch -fp #{activeApp}", (err) -> win?.hide()
 
 activeWinApp = ->
-    
+
     activeWin = require 'active-win'
     winInfo = activeWin.sync()
 
     if winInfo?.owner?
         return slash.base winInfo.owner.name
     return null
-    
+
 #000   000  000  000   000  0000000     0000000   000   000
 #000 0 000  000  0000  000  000   000  000   000  000 0 000
 #000000000  000  000 0 000  000   000  000   000  000000000
@@ -102,7 +102,7 @@ activeWinApp = ->
 #00     00  000  000   000  0000000     0000000   00     00
 
 toggleWindow = ->
-    
+
     if win?.isVisible()
         activateApp()
     else
@@ -122,22 +122,22 @@ toggleWindow = ->
             """
             name = childp.execSync "osascript #{script}"
             appName = String(name).trim()
-            
+
             if not win?
                 createWindow()
             else
                 getActiveApp()
                 win.show()
-                win.focus()            
+                win.focus()
 
 reloadWindow = -> win.webContents.reloadIgnoringCache()
 
 showWindow = -> getActiveApp()
-    
+
 createWindow = ->
-    
+
     return if win?
-    
+
     win = new BrowserWindow
         width:           300
         height:          300
@@ -155,14 +155,14 @@ createWindow = ->
         maxHeight:       600
         fullscreen:      false
         show:            false
-        
+
     bounds = prefs.get 'bounds'
     win.setBounds bounds if bounds?
     win.loadURL "file://#{__dirname}/index.html"
     win.on 'closed', -> win = null
     win.on 'resize', onWinResize
     win.on 'move',   saveBounds
-    win.on 'ready-to-show', -> 
+    win.on 'ready-to-show', ->
         getActiveApp()
         if args.debug
             win.webContents.openDevTools()
@@ -177,29 +177,29 @@ onWinResize = (event) ->
     adjustSize = ->
         b = win.getBounds()
         if b.width != b.height
-            b.width = b.height = Math.min b.width, b.height 
+            b.width = b.height = Math.min b.width, b.height
             win.setBounds b
         saveBounds()
     squareTimer = setTimeout adjustSize, 300
-    
+
 showAbout = ->
-    about 
+    about
         img:        "#{__dirname}/../img/about.png"
         color:      "#ddd"
         highlight:  "#000"
         background: "#fff"
         size:       200
         pkg:        pkg
-    
+
 app.on 'window-all-closed', (event) -> event.preventDefault()
 
 #00000000   00000000   0000000   0000000    000   000
-#000   000  000       000   000  000   000   000 000 
-#0000000    0000000   000000000  000   000    00000  
-#000   000  000       000   000  000   000     000   
-#000   000  00000000  000   000  0000000       000   
+#000   000  000       000   000  000   000   000 000
+#0000000    0000000   000000000  000   000    00000
+#000   000  000       000   000  000   000     000
+#000   000  00000000  000   000  0000000       000
 
-app.on 'ready', -> 
+app.on 'ready', ->
 
     if app.makeSingleInstance(->)
         app.exit 0
@@ -208,25 +208,25 @@ app.on 'ready', ->
     tray = new Tray "#{__dirname}/../img/menu.png"
     tray.on 'click', toggleWindow
     app.dock?.hide()
-    
+
     # 00     00  00000000  000   000  000   000
     # 000   000  000       0000  000  000   000
     # 000000000  0000000   000 0 000  000   000
     # 000 0 000  000       000  0000  000   000
-    # 000   000  00000000  000   000   0000000 
-    
+    # 000   000  00000000  000   000   0000000
+
     Menu.setApplicationMenu Menu.buildFromTemplate [
         label: app.getName()
         submenu: [
             label: "About #{pkg.name}"
             accelerator: 'CmdOrCtrl+.'
             click: -> showAbout()
-        ,            
+        ,
             type: 'separator'
         ,
             label: 'Quit'
             accelerator: 'CmdOrCtrl+Q'
-            click: -> 
+            click: ->
                 saveBounds()
                 app.exit 0
         ]
@@ -236,7 +236,7 @@ app.on 'ready', ->
         # 000000000  000  000 0 000  000   000  000   000  000000000
         # 000   000  000  000  0000  000   000  000   000  000   000
         # 00     00  000  000   000  0000000     0000000   00     00
-        
+
         label: 'Window'
         submenu: [
             label:       'Close Window'
@@ -244,102 +244,111 @@ app.on 'ready', ->
             click:       -> win?.close()
         ,
             type: 'separator'
-        ,                            
+        ,
             label:       'Reload Window'
             accelerator: 'CmdOrCtrl+Alt+L'
             click:       -> reloadWindow()
-        ,                
+        ,
             label:       'Toggle DevTools'
             accelerator: 'CmdOrCtrl+Alt+I'
             click:       -> win?.webContents.openDevTools()
         ]
     ]
-        
+
     prefs.init shortcut: 'F1'
 
     electron.globalShortcut.register prefs.get('shortcut'), toggleWindow
 
     fs.ensureDirSync iconDir
-    
+
     if slash.win()
         findExes()
     else
         findScripts()
         findApps()
-    
-sortKeys = ->
-    
-    allKeys = Object.keys(apps).concat Object.keys(scripts)
-    allKeys.sort (a,b) -> a.toLowerCase().localeCompare b.toLowerCase() 
 
-# 00000000  000  000   000  0000000          00000000  000   000  00000000   0000000  
-# 000       000  0000  000  000   000        000        000 000   000       000       
-# 000000    000  000 0 000  000   000        0000000     00000    0000000   0000000   
-# 000       000  000  0000  000   000        000        000 000   000            000  
-# 000       000  000   000  0000000          00000000  000   000  00000000  0000000   
+sortKeys = ->
+
+    allKeys = Object.keys(apps).concat Object.keys(scripts)
+    allKeys.sort (a,b) -> a.toLowerCase().localeCompare b.toLowerCase()
+
+# 00000000  000  000   000  0000000          00000000  000   000  00000000   0000000
+# 000       000  0000  000  000   000        000        000 000   000       000
+# 000000    000  000 0 000  000   000        0000000     00000    0000000   0000000
+# 000       000  000  0000  000   000        000        000 000   000            000
+# 000       000  000   000  0000000          00000000  000   000  00000000  0000000
 
 findExes = ->
-    
+
     apps['cmd']      = "C:/Windows/System32/cmd.exe"
     apps['calc']     = "C:/Windows/System32/calc.exe"
     apps['regedit']  = "C:/Windows/regedit.exe"
     apps['explorer'] = "C:/Windows/explorer.exe"
-    
-    exeFolders  = [ "C:/Program Files", "C:/Program Files (x86)", "C:/Users/kodi/s" ]
+    apps['fish']     = "C:/msys64/fish.lnk"
+
+    exeFolders  = [ "C:/Program Files", "C:/Program Files (x86)" ]
     exeFolders  = exeFolders.concat prefs.get 'dirs', []
+
+    if slash.win() and slash.isDir 'C:/Users/kodi/s'
+        exeFolders.push 'C:/Users/kodi/s'
+
+    log 'searching:', exeFolders
+
+    blackList   = prefs.get 'blackList', []
     foldersLeft = exeFolders.length
-    
+
     for exeFolder in exeFolders
-        walkOpt = prefs.get 'walk', no_recurse: false, max_depth: 3 
+        walkOpt = prefs.get 'walk', no_recurse: false, max_depth: 3
         walk = walkdir slash.resolve(exeFolder), walkOpt
-        
+
         walk.on 'error', (err) -> log "[ERROR] findExes -- #{err}"
-        
-        walk.on 'end', -> 
-            
-            foldersLeft -= 1 
+
+        walk.on 'end', ->
+
+            foldersLeft -= 1
             if foldersLeft == 0
                 sortKeys()
-                # doSearch ''
                 log "found #{_.size apps} exes"
-                
-        walk.on 'file', (file) -> 
-            
+
+        walk.on 'file', (file) ->
+
+            file = slash.resolve file
             if slash.ext(file) == 'exe'
                 name = slash.base file
-                apps[name] = file
-                
-# 00000000  000  000   000  0000000           0000000   0000000  00000000   000  00000000   000000000   0000000  
-# 000       000  0000  000  000   000        000       000       000   000  000  000   000     000     000       
-# 000000    000  000 0 000  000   000        0000000   000       0000000    000  00000000      000     0000000   
-# 000       000  000  0000  000   000             000  000       000   000  000  000           000          000  
-# 000       000  000   000  0000000          0000000    0000000  000   000  000  000           000     0000000   
+                if file not in blackList 
+                    apps[name] = file
+
+# 00000000  000  000   000  0000000           0000000   0000000  00000000   000  00000000   000000000   0000000
+# 000       000  0000  000  000   000        000       000       000   000  000  000   000     000     000
+# 000000    000  000 0 000  000   000        0000000   000       0000000    000  00000000      000     0000000
+# 000       000  000  0000  000   000             000  000       000   000  000  000           000          000
+# 000       000  000   000  0000000          0000000    0000000  000   000  000  000           000     0000000
 
 findScripts = () ->
-    scripts = 
+    scripts =
         sleep:
             exec:   "pmset sleepnow"
             img:    "#{__dirname}/../scripts/sleep.png"
         shutdown:
-            exec:   "osascript -e 'tell app \"System Events\" to shut down'" 
+            exec:   "osascript -e 'tell app \"System Events\" to shut down'"
             img:    "#{__dirname}/../scripts/shutdown.png"
         restart:
             exec:   "osascript -e 'tell app \"System Events\" to restart'"
             img:    "#{__dirname}/../scripts/restart.png"
-            
+
     if prefs.get 'confirmShutdown'
         scripts.shutdown.exec = "osascript -e 'tell app \"loginwindow\" to «event aevtrsdn»'"
     if prefs.get 'confirmRestart'
         scripts.restart.exec = "osascript -e 'tell app \"loginwindow\" to «event aevtrrst»'"
-    
-# 00000000  000  000   000  0000000           0000000   00000000   00000000    0000000  
-# 000       000  0000  000  000   000        000   000  000   000  000   000  000       
-# 000000    000  000 0 000  000   000        000000000  00000000   00000000   0000000   
-# 000       000  000  0000  000   000        000   000  000        000             000  
-# 000       000  000   000  0000000          000   000  000        000        0000000   
+
+# 00000000  000  000   000  0000000           0000000   00000000   00000000    0000000
+# 000       000  0000  000  000   000        000   000  000   000  000   000  000
+# 000000    000  000 0 000  000   000        000000000  00000000   00000000   0000000
+# 000       000  000  0000  000   000        000   000  000        000             000
+# 000       000  000   000  0000000          000   000  000        000        0000000
 
 findApps = ->
-    
+
     apps['Finder'] = "/System/Library/CoreServices/Finder.app"
     appFolders = [
         "/Applications"
@@ -347,19 +356,17 @@ findApps = ->
         ]
     appFolders = appFolders.concat prefs.get 'dirs', []
     foldersLeft = appFolders.length
-    
+
     for appFolder in appFolders
         walkOpt = prefs.get 'walk', no_recurse: true
         walk = walkdir slash.resolve(appFolder), walkOpt
         walk.on 'error', (err) -> log "[ERROR] findApps -- #{err}"
-        walk.on 'end', -> 
-            foldersLeft -= 1 
+        walk.on 'end', ->
+            foldersLeft -= 1
             if foldersLeft == 0
                 sortKeys()
-                # doSearch ''
-        walk.on 'directory', (dir) -> 
+        walk.on 'directory', (dir) ->
             if slash.ext(dir) == 'app'
                 name = slash.base dir
                 apps[name] = dir
-    
-    
+
