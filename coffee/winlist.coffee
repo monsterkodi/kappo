@@ -20,14 +20,27 @@ user = new ffi.Library 'User32.dll',
     GetWindowThreadProcessId:   ['uint32',  ['pointer', 'uint32 *']]
     IsWindowVisible:            ['int',     ['pointer']]
     EnumWindows:                ['int',     ['pointer', 'pointer']]
+    GetWindowLongW:             ['long',    ['pointer', 'int']]
 
 kernel = new ffi.Library 'kernel32',
     OpenProcess:                ['pointer', ['uint32', 'int', 'uint32']]
     CloseHandle:                ['int',     ['pointer']]
     QueryFullProcessImageNameW: ['int',     ['pointer', 'uint32', 'pointer', 'pointer']]
 
+zOrderOfWin = (hWnd) ->
+    
+    GW_HWNDPREV = 3
+    count = 0
+    while (nextWnd = user.GetWindow(hWnd, GW_HWNDPREV)) and ref.address nextWnd
+        hWnd = nextWnd
+        count += 1
+    count
+    
 winList = ->
      
+    WS_MINIMIZE = 0x20000000
+    GWL_STYLE   = -16
+    
     windows = []
     
     enumProc = ffi.Callback 'int', ['pointer', 'pointer'], (hWnd, lParam) ->
@@ -48,9 +61,12 @@ winList = ->
         titleClean = ref.reinterpretUntilZeros titleBuffer, wchar.size
         title      = wchar.toString titleClean
         
-        # if empty title
-            # return 1
+        if empty title
+            return 1
         
+        zOrder     = zOrderOfWin hWnd
+        minimized  = user.GetWindowLongW(hWnd, GWL_STYLE) & WS_MINIMIZE
+            
         procBuffer = ref.alloc 'uint32'
         threadID   = user.GetWindowThreadProcessId hWnd, procBuffer
         procID     = ref.get procBuffer
@@ -65,18 +81,20 @@ winList = ->
         kernel.CloseHandle procHandle
                 
         windows.push
-            hwnd:     hWnd
-            title:    title
-            visible:  visible
-            ownerID:  ownerID
-            winID:    winID
-            procID:   procID
-            threadID: threadID
-            path:     path
+            zOrder:     zOrder
+            hwnd:       hWnd
+            title:      title
+            minimized:  minimized
+            winID:      winID
+            procID:     procID
+            threadID:   threadID
+            path:       path
             
         return 1
     
     user.EnumWindows enumProc, null
+    windows.sort (a,b) -> b.zOrder - a.zOrder
+    # log 'windows', windows
     windows
         
 module.exports = winList
