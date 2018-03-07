@@ -192,7 +192,7 @@ setIcon = (iconPath) ->
 # 0000000   00000000  0000000  00000000   0000000     000
 
 select = (index) =>
-    log 'select', index
+    # log 'select', index
     current = (index + results.length) % results.length
     currentName = results[current].name
     $('appname').innerHTML = results[current].string
@@ -204,7 +204,7 @@ select = (index) =>
         getScriptIcon currentName
 
 selectName = (name) ->
-    log 'selectName', name
+    # log 'selectName', name
     select results.findIndex (r) ->
         r.name.toLowerCase() == name.toLowerCase()
 

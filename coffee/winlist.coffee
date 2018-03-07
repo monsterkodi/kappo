@@ -63,6 +63,8 @@ winList = ->
         
         if empty title
             return 1
+        if title == 'Program Manager'
+            return 1
         
         zOrder     = zOrderOfWin hWnd
         minimized  = user.GetWindowLongW(hWnd, GWL_STYLE) & WS_MINIMIZE
