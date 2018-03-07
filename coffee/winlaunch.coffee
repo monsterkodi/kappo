@@ -37,11 +37,11 @@ winLaunch = (exePath) ->
     if visWins.length == 0
         visWins = appWins
 
-    log visWins
+    # log visWins
     
     for win in visWins
         
-        log "-------- foreground #{win.winID} #{exePath} :: #{win.title} "
+        # log "-------- foreground #{win.winID} #{exePath} :: #{win.title} "
   
         VK_MENU     = 0x12 # ALT key
         SW_RESTORE  = 9
@@ -61,7 +61,7 @@ winLaunch = (exePath) ->
         
         return focusWins:focusWins
         
-    log "+++++++++ start #{exePath}"
+    # log "+++++++++ start #{exePath}"
 
     subprocess = childp.spawn "\"#{exePath}\"", [], detached: true, stdio: 'ignore', shell: true
     subprocess.on 'error', (err) ->

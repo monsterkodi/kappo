@@ -94,7 +94,11 @@ doBlackList = ->
     blackList.push apps[currentName]
     prefs.set 'blackList', blackList
     # log "doBlackList #{currentName} #{apps[currentName]}:", blackList
-    select current+1
+    delete apps[currentName]
+    results.splice current, 1
+    # doSearch results[current].name
+    select current
+    # select current+1
 
 #  0000000  000   000  00000000   00000000   00000000  000   000  000000000
 # 000       000   000  000   000  000   000  000       0000  000     000
@@ -108,7 +112,7 @@ currentApp = (e, appName) ->
 
     if currentName.toLowerCase() == appName.toLowerCase() and appHist.previous()
         doSearch appHist.previous()
-        clearSearch()
+        search = ''
     else
         name = currentName
         doSearch ''
@@ -246,6 +250,7 @@ showDots = ->
 # 0000000   00000000  000   000  000   000   0000000  000   000
 
 doSearch = (s) ->
+    
     search  = s
     names   = allKeys
     fuzzied = fuzzy.filter search, names, pre: '<b>', post: '</b>'

@@ -286,9 +286,10 @@ findExes = ->
     apps['explorer'] = "C:/Windows/explorer.exe"
     
     apps['fish']     = "C:/msys64/fish.lnk"
-    apps['term']     = "C:/msys64/usr/bin/mintty.exe"
+    apps['mintty']   = "C:/msys64/usr/bin/mintty.exe"
     apps['vs']       = "C:/Program Files (x86)/Microsoft Visual Studio 14.0/Common7/IDE/devenv.exe"
-
+    apps['konrad']   = "C:/Users/kodi/s/konrad/app/konrad-win32-x64/konrad.exe"
+    
     exeFolders  = [ "C:/Program Files", "C:/Program Files (x86)" ]
     exeFolders  = exeFolders.concat prefs.get 'dirs', []
 
