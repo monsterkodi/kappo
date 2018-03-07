@@ -6,8 +6,8 @@
 0000000  000   000  00000000  000   0000000   0000000   000   000  
 ###
 
-{ slash, fs, error, log } = require 'kxk'
-
+{ slash, empty, fs, childp, error, log } = require 'kxk'
+    
 class ExeIcon
     
     @cache = {}
@@ -28,28 +28,41 @@ class ExeIcon
                     opt.cb pngPath, opt.cbArg
                 else
                     ExeIcon.getIcon opt
-         
+                    
     @getIcon: (opt) ->
         
         appPath = opt.appPath
+        pngPath = ExeIcon.pngPath opt
         
-        { getIconForPath, ICON_SIZE_LARGE, ICON_SIZE_MEDIUM } = require 'system-icon'
-            
-        getIconForPath appPath, ICON_SIZE_LARGE, (err, data) ->
-            if not err?
-                ExeIcon.saveIconData data, opt
+        childp.exec "#{__dirname}/../bin/Quick_Any2Ico.exe  -formats=512 \"-res=#{appPath}\" \"-icon=#{pngPath}\"", opt, (err,stdout,stderr) -> 
+            if not err 
+                log stdout
+                opt.cb pngPath, opt.cbArg
             else
-                getIconForPath appPath, ICON_SIZE_MEDIUM, (err, data) ->
-                    if not err?
-                        ExeIcon.saveIconData data, opt
-                    else 
-                        extractIcon = require 'win-icon-extractor'
-                        extractIcon(appPath).then (result) ->
-                            if result
-                                data = result.slice 'data:image/png;base64,'.length
-                                ExeIcon.saveIconBase64 data, opt
-                            else
-                                ExeIcon.brokenIcon opt
+                error stdout, stderr, err
+                ExeIcon.brokenIcon opt
+                
+        # { getIconForPath, ICON_SIZE_LARGE, ICON_SIZE_MEDIUM, ICON_SIZE_EXTRA_LARGE } = require 'system-icon'
+#             
+        # getIconForPath appPath, ICON_SIZE_EXTRA_LARGE, (err, data) ->
+            # if not err?
+                # ExeIcon.saveIconData data, opt
+            # else
+                # getIconForPath appPath, ICON_SIZE_LARGE, (err, data) ->
+                    # if not err?
+                        # ExeIcon.saveIconData data, opt
+                    # else
+                        # getIconForPath appPath, ICON_SIZE_MEDIUM, (err, data) ->
+                            # if not err?
+                                # ExeIcon.saveIconData data, opt
+                            # else 
+                                # extractIcon = require 'win-icon-extractor'
+                                # extractIcon(appPath).then (result) ->
+                                    # if result
+                                        # data = result.slice 'data:image/png;base64,'.length
+                                        # ExeIcon.saveIconBase64 data, opt
+                                    # else
+                                        # ExeIcon.brokenIcon opt
                 
     @saveIconData: (data, opt) ->
         
