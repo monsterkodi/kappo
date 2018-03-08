@@ -87,18 +87,20 @@ openCurrent = ->
         childp.exec scripts[currentName].exec, (err) ->
             if err? then log "[ERROR] can't execute script #{scripts[currentName]}: #{err}"
 
-doBlackList = ->
+blacklist = ->
 
-    blackList = prefs.get 'blackList', []
-    _.pull blackList, apps[currentName]
-    blackList.push apps[currentName]
-    prefs.set 'blackList', blackList
-    # log "doBlackList #{currentName} #{apps[currentName]}:", blackList
+    ignore = prefs.get 'ignore', []
+    
+    _.pull ignore, apps[currentName]
+    ignore.push    apps[currentName]
+    
+    prefs.set 'ignore', ignore
+    
     delete apps[currentName]
+    
     results.splice current, 1
-    # doSearch results[current].name
+    
     select current
-    # select current+1
 
 #  0000000  000   000  00000000   00000000   00000000  000   000  000000000
 # 000       000   000  000   000  000   000  000       0000  000     000
@@ -198,6 +200,8 @@ setIcon = (iconPath) ->
 select = (index) =>
     # log 'select', index
     current = (index + results.length) % results.length
+    if not results[current]?
+        log 'dafuk? index:', index, 'results:', results
     currentName = results[current].name
     $('appname').innerHTML = results[current].string
     $('.current')?.classList.remove 'current'
@@ -359,7 +363,7 @@ document.onkeydown = (event) ->
     # log 'combo', combo
 
     switch combo
-        when 'delete'                                       then doBlackList()
+        when 'delete'                                       then blacklist()
         when 'backspace'                                    then backspace()
         when 'command+backspace',       'ctrl+backspace'    then doSearch ''
         when 'command+i', 'ctrl+i'                          then scheme.toggle()

@@ -21,11 +21,11 @@ exeFind = (cb) ->
     apps['regedit']  = "C:/Windows/regedit.exe"
     apps['explorer'] = "C:/Windows/explorer.exe"
 
-    exeFolders = prefs.get 'dirs', []
+    dirs = _.clone prefs.get 'dirs', []
     
-    exeFolders.push "C:/Program Files"
-    exeFolders.push "C:/Program Files (x86)"
-    exeFolders.push slash.resolve '~/AppData/Local'
+    dirs.push "C:/Program Files"
+    dirs.push "C:/Program Files (x86)"
+    dirs.push slash.resolve '~/AppData/Local'
 
     # dirs
             # C:/Users/kodi/s
@@ -42,9 +42,9 @@ exeFind = (cb) ->
         # C:/Program Files (x86)/Microsoft Visual Studio 14.0/Common7/IDE/devenv.exe
 
     ignore = prefs.get 'ignore', []
-    foldersLeft = exeFolders.length
+    foldersLeft = dirs.length
 
-    for exeFolder in exeFolders
+    for exeFolder in dirs
         
         log 'search', exeFolder
         
