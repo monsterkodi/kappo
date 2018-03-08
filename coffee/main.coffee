@@ -24,6 +24,8 @@ apps          = {}
 scripts       = {}
 allKeys       = []
 
+app.setName pkg.productName
+
 args = karg """
 kappo
     debug  . ? log debug    . = false . - D
@@ -229,6 +231,7 @@ app.on 'ready', ->
             click: ->
                 saveBounds()
                 app.exit 0
+                process.exit 0
         ]
     ,
         # 000   000  000  000   000  0000000     0000000   000   000
@@ -282,19 +285,22 @@ findExes = ->
 
     apps['cmd']      = "C:/Windows/System32/cmd.exe"
     apps['calc']     = "C:/Windows/System32/calc.exe"
+    apps['Taskmgr']  = "C:/Windows/System32/Taskmgr.exe"
     apps['regedit']  = "C:/Windows/regedit.exe"
     apps['explorer'] = "C:/Windows/explorer.exe"
-    
+
     apps['fish']     = "C:/msys64/fish.lnk"
     apps['mintty']   = "C:/msys64/usr/bin/mintty.exe"
-    apps['vs']       = "C:/Program Files (x86)/Microsoft Visual Studio 14.0/Common7/IDE/devenv.exe"
-    apps['konrad']   = "C:/Users/kodi/s/konrad/app/konrad-win32-x64/konrad.exe"
-    
+
     exeFolders  = [ "C:/Program Files", "C:/Program Files (x86)" ]
     exeFolders  = exeFolders.concat prefs.get 'dirs', []
 
-    if slash.win() and slash.isDir 'C:/Users/kodi/s'
+    if slash.isDir 'C:/Users/kodi/s'
         exeFolders.push 'C:/Users/kodi/s'
+        apps['konrad'] = "C:/Users/kodi/s/konrad/app/konrad-win32-x64/konrad.exe"
+    else if slash.isDir 'C:/Users/t.kohnhorst'
+        apps['konrad'] = "C:/Users/t.kohnhorst/s/konrad/app/konrad-win32-x64/konrad.exe"
+        apps['devenv'] = "C:/Program Files (x86)/Microsoft Visual Studio 14.0/Common7/IDE/devenv.exe"
 
     log 'searching:', exeFolders
 
@@ -319,7 +325,7 @@ findExes = ->
             file = slash.resolve file
             if slash.ext(file) == 'exe'
                 name = slash.base file
-                if file not in blackList 
+                if file not in blackList
                     apps[name] = file
 
 # 00000000  000  000   000  0000000           0000000   0000000  00000000   000  00000000   000000000   0000000
