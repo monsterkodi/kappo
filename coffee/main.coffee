@@ -265,7 +265,10 @@ app.on 'ready', ->
     fs.ensureDirSync iconDir
 
     if slash.win()
-        findExes()
+        exeFind = require './exefind'
+        exeFind (exes) -> 
+            apps = exes
+            sortKeys()
     else
         findScripts()
         findApps()
@@ -274,59 +277,6 @@ sortKeys = ->
 
     allKeys = Object.keys(apps).concat Object.keys(scripts)
     allKeys.sort (a,b) -> a.toLowerCase().localeCompare b.toLowerCase()
-
-# 00000000  000  000   000  0000000          00000000  000   000  00000000   0000000
-# 000       000  0000  000  000   000        000        000 000   000       000
-# 000000    000  000 0 000  000   000        0000000     00000    0000000   0000000
-# 000       000  000  0000  000   000        000        000 000   000            000
-# 000       000  000   000  0000000          00000000  000   000  00000000  0000000
-
-findExes = ->
-
-    apps['cmd']      = "C:/Windows/System32/cmd.exe"
-    apps['calc']     = "C:/Windows/System32/calc.exe"
-    apps['Taskmgr']  = "C:/Windows/System32/Taskmgr.exe"
-    apps['regedit']  = "C:/Windows/regedit.exe"
-    apps['explorer'] = "C:/Windows/explorer.exe"
-
-    apps['fish']     = "C:/msys64/fish.lnk"
-    apps['mintty']   = "C:/msys64/usr/bin/mintty.exe"
-
-    exeFolders  = [ "C:/Program Files", "C:/Program Files (x86)" ]
-    exeFolders  = exeFolders.concat prefs.get 'dirs', []
-
-    if slash.isDir 'C:/Users/kodi/s'
-        exeFolders.push 'C:/Users/kodi/s'
-        apps['konrad'] = "C:/Users/kodi/s/konrad/app/konrad-win32-x64/konrad.exe"
-    else if slash.isDir 'C:/Users/t.kohnhorst'
-        apps['konrad'] = "C:/Users/t.kohnhorst/s/konrad/app/konrad-win32-x64/konrad.exe"
-        apps['devenv'] = "C:/Program Files (x86)/Microsoft Visual Studio 14.0/Common7/IDE/devenv.exe"
-
-    log 'searching:', exeFolders
-
-    blackList   = prefs.get 'blackList', []
-    foldersLeft = exeFolders.length
-
-    for exeFolder in exeFolders
-        walkOpt = prefs.get 'walk', no_recurse: false, max_depth: 3
-        walk = walkdir slash.resolve(exeFolder), walkOpt
-
-        walk.on 'error', (err) -> log "[ERROR] findExes -- #{err}"
-
-        walk.on 'end', ->
-
-            foldersLeft -= 1
-            if foldersLeft == 0
-                sortKeys()
-                log "found #{_.size apps} exes"
-
-        walk.on 'file', (file) ->
-
-            file = slash.resolve file
-            if slash.ext(file) == 'exe'
-                name = slash.base file
-                if file not in blackList
-                    apps[name] = file
 
 # 00000000  000  000   000  0000000           0000000   0000000  00000000   000  00000000   000000000   0000000
 # 000       000  0000  000  000   000        000       000       000   000  000  000   000     000     000
