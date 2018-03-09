@@ -13,11 +13,13 @@ pkg          = require '../package.json'
 fuzzy        = require 'fuzzy'
 fuzzaldrin   = require 'fuzzaldrin'
 electron     = require 'electron'
+
 clipboard    = electron.clipboard
 browser      = electron.remote.BrowserWindow
 ipc          = electron.ipcRenderer
 win          = electron.remote.getCurrentWindow()
 iconDir      = slash.resolve "#{electron.remote.app.getPath('userData')}/icons"
+
 appHist      = null
 results      = []
 apps         = {}

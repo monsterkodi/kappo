@@ -74,7 +74,6 @@ class ExeIcon
         pngPath = ExeIcon.pngPath opt
         fs.writeFile pngPath, data, (err) ->
             if not err?
-                # log 'saveIconData', pngPath
                 opt.cb pngPath, opt.cbArg
             else
                 error "saveIconData: #{err}"
@@ -85,7 +84,6 @@ class ExeIcon
         pngPath = ExeIcon.pngPath opt
         fs.writeFile pngPath, data, {encoding: 'base64'}, (err) ->
             if not err?
-                # log 'saveIconBase64', pngPath
                 opt.cb pngPath, opt.cbArg
             else
                 error "saveIconBase64: #{err}"

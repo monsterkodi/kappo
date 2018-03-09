@@ -6,10 +6,11 @@
 000   000  000   000  000  000   000
 ###
 
-{ osascript, walkdir, about, karg, childp, prefs, post, karg, slash, log, fs, _ } = require 'kxk'
+{ walkdir, about, karg, childp, prefs, post, karg, slash, log, fs, _ } = require 'kxk'
 
 pkg           = require '../package.json'
 electron      = require 'electron'
+
 app           = electron.app
 BrowserWindow = electron.BrowserWindow
 Tray          = electron.Tray
@@ -17,6 +18,7 @@ Menu          = electron.Menu
 clipboard     = electron.clipboard
 ipc           = electron.ipcMain
 iconDir       = slash.resolve "#{app.getPath('userData')}/icons"
+
 win           = null
 tray          = null
 
@@ -116,6 +118,7 @@ toggleWindow = ->
                 win.show()
                 win.focus()
         else
+            osascript = require 'osascript'
             script = osascript """
             tell application "System Events"
                 set n to name of first application process whose frontmost is true

@@ -1,6 +1,6 @@
 name            kappo
 productName     kappo
-version         1.2.0
+version         1.6.0
 description     application opener
 main            js/main.js
 scripts
@@ -32,6 +32,7 @@ dependencies
                 win-icon-extractor  ^1.0.4
                 win32-api       ^1.11.0
                 winctl          ^1.0.2
+                wxw             0.0.4
 optionalDependencies
                 simple-plist  ^0.2.1
 devDependencies
