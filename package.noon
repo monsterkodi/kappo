@@ -1,6 +1,6 @@
 name            kappo
 productName     kappo
-version         1.7.0
+version         1.8.0
 description     application opener
 main            js/main.js
 scripts
@@ -28,8 +28,7 @@ dependencies
                 ref-struct    ^1.1.0
                 ref-wchar     ^1.0.2
                 system-icon   ^0.1.1
-                winctl        ^1.0.2
-                wxw           0.0.4
+                wxw           ^0.2.4
 optionalDependencies
                 win-icon-extractor  ^1.0.4
                 simple-plist    ^0.2.1

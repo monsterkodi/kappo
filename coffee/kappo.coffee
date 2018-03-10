@@ -120,7 +120,7 @@ blacklist = ->
 
 currentApp = (e, appName) ->
 
-    log 'currentApp appName:', appName, 'currentName:', currentName
+    # log 'currentApp appName:', appName, 'currentName:', currentName
 
     if currentName.toLowerCase() == appName.toLowerCase() and appHist.previous()
         doSearch appHist.previous()

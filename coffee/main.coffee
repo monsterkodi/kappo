@@ -60,11 +60,12 @@ activeWin = null
 getActiveApp = ->
 
     if slash.win()
-        activeApp = activeWinApp()
-        appName = activeApp
-        winctl = require 'winctl'
-        activeWin = winctl.GetActiveWindow()
-        log 'activeApp: ', activeApp, activeWin.getHwnd(), activeWin.getTitle()
+        wxw = require 'wxw'
+        activeWin = wxw.active()
+        wxwInfo = wxw.wininfo activeWin
+        if wxwInfo?.path?
+            appName = activeApp = slash.base wxwInfo.path
+        # log 'activeApp: ', activeApp
     else
         activeApp = childp.execSync "#{__dirname}/../bin/appswitch -P"
 
@@ -79,10 +80,10 @@ getActiveApp = ->
 activateApp = ->
 
     if slash.win()
-        log "activate: #{activeApp} #{activeWin?.getHwnd()} #{activeWin?.getTitle()}"
-        winctl = require 'winctl'
-        activeWin?.showWindow winctl.WindowStates.SHOW
-        activeWin?.setForegroundWindow()
+        # log "activate: #{activeApp}}"
+        if activeWin
+            wxw = require 'wxw'
+            wxw.foreground activeWin
         win?.hide()
     else
 
@@ -90,16 +91,6 @@ activateApp = ->
             win?.hide()
         else
             childp.exec "#{__dirname}/../bin/appswitch -fp #{activeApp}", (err) -> win?.hide()
-
-activeWinApp = ->
-
-    wxw = require 'wxw'
-    
-    wxwInfo = wxw.wininfo wxw.active()
-    if wxwInfo?.path?
-        return slash.base wxwInfo.path
-    
-    return null
 
 #000   000  000  000   000  0000000     0000000   000   000
 #000 0 000  000  0000  000  000   000  000   000  000 0 000
