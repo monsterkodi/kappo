@@ -18,22 +18,21 @@ license         Unlicense
 bugs
                 url  https://github.com/monsterkodi/kappo/issues
 dependencies
-                active-win      ^3.0.0
-                ffi             ^2.2.0
-                fuzzaldrin      ^2.1.0
-                fuzzy           ^0.1.3
-                kxk             ^0.35.0
-                opener          ^1.4.3
-                ref             ^1.3.5
-                ref-array       ^1.2.0
-                ref-struct      ^1.1.0
-                ref-wchar       ^1.0.2
-                system-icon     ^0.1.1
-                winctl          ^1.0.2
-                wxw             0.0.4
+                ffi           ^2.2.0
+                fuzzaldrin    ^2.1.0
+                fuzzy         ^0.1.3
+                kxk           ^0.35.0
+                opener        ^1.4.3
+                ref           ^1.3.5
+                ref-array     ^1.2.0
+                ref-struct    ^1.1.0
+                ref-wchar     ^1.0.2
+                system-icon   ^0.1.1
+                winctl        ^1.0.2
+                wxw           0.0.4
 optionalDependencies
                 win-icon-extractor  ^1.0.4
-                simple-plist  ^0.2.1
+                simple-plist    ^0.2.1
 devDependencies
                 electron        ^1.8.2
                 electron-packager  ^8.7.2

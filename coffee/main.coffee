@@ -93,11 +93,12 @@ activateApp = ->
 
 activeWinApp = ->
 
-    activeWin = require 'active-win'
-    winInfo = activeWin.sync()
-
-    if winInfo?.owner?
-        return slash.base winInfo.owner.name
+    wxw = require 'wxw'
+    
+    wxwInfo = wxw.wininfo wxw.active()
+    if wxwInfo?.path?
+        return slash.base wxwInfo.path
+    
     return null
 
 #000   000  000  000   000  0000000     0000000   000   000
