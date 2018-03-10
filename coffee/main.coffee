@@ -44,6 +44,7 @@ version  #{pkg.version}
 ipc.on  'cancel', -> activateApp()
 
 post.on 'winlog', (text) -> log ">>> " + text
+post.on 'runScript', (name) -> scripts[name].cb()
 post.onGet 'apps', -> apps: apps, scripts:scripts, allKeys:allKeys
 
 # 0000000    0000000  000000000  000  000   000  00000000
@@ -177,6 +178,7 @@ createWindow = ->
 saveBounds = -> if win? then prefs.set 'bounds', win.getBounds()
 
 squareTimer = null
+
 onWinResize = (event) ->
     clearTimeout squareTimer
     adjustSize = ->
@@ -189,11 +191,12 @@ onWinResize = (event) ->
 
 showAbout = ->
     
+    color = prefs.get('scheme', 'bright') and '#fff' or '#222'
     about
         img:        "#{__dirname}/../img/about.png"
         color:      "#ddd"
         highlight:  "#000"
-        background: "#fff"
+        background: color
         size:       200
         pkg:        pkg
 
@@ -277,69 +280,22 @@ app.on 'ready', ->
 
     fs.ensureDirSync iconDir
 
+    sortKeys = ->
+        allKeys = Object.keys(apps).concat Object.keys(scripts)
+        allKeys.sort (a,b) -> a.toLowerCase().localeCompare b.toLowerCase()
+    
+    scr = require './scripts'
     if slash.win()
+        scripts = scr.winScripts()
         exeFind = require './exefind'
         exeFind (exes) -> 
             apps = exes
             sortKeys()
     else
-        findScripts()
-        findApps()
-
-sortKeys = ->
-
-    allKeys = Object.keys(apps).concat Object.keys(scripts)
-    allKeys.sort (a,b) -> a.toLowerCase().localeCompare b.toLowerCase()
-
-# 00000000  000  000   000  0000000           0000000   0000000  00000000   000  00000000   000000000   0000000
-# 000       000  0000  000  000   000        000       000       000   000  000  000   000     000     000
-# 000000    000  000 0 000  000   000        0000000   000       0000000    000  00000000      000     0000000
-# 000       000  000  0000  000   000             000  000       000   000  000  000           000          000
-# 000       000  000   000  0000000          0000000    0000000  000   000  000  000           000     0000000
-
-findScripts = () ->
-    scripts =
-        sleep:
-            exec:   "pmset sleepnow"
-            img:    "#{__dirname}/../scripts/sleep.png"
-        shutdown:
-            exec:   "osascript -e 'tell app \"System Events\" to shut down'"
-            img:    "#{__dirname}/../scripts/shutdown.png"
-        restart:
-            exec:   "osascript -e 'tell app \"System Events\" to restart'"
-            img:    "#{__dirname}/../scripts/restart.png"
-
-    if prefs.get 'confirmShutdown'
-        scripts.shutdown.exec = "osascript -e 'tell app \"loginwindow\" to «event aevtrsdn»'"
-    if prefs.get 'confirmRestart'
-        scripts.restart.exec = "osascript -e 'tell app \"loginwindow\" to «event aevtrrst»'"
-
-# 00000000  000  000   000  0000000           0000000   00000000   00000000    0000000
-# 000       000  0000  000  000   000        000   000  000   000  000   000  000
-# 000000    000  000 0 000  000   000        000000000  00000000   00000000   0000000
-# 000       000  000  0000  000   000        000   000  000        000             000
-# 000       000  000   000  0000000          000   000  000        000        0000000
-
-findApps = ->
-
-    apps['Finder'] = "/System/Library/CoreServices/Finder.app"
-    appFolders = [
-        "/Applications"
-        "/Applications/Utilities"
-        ]
-    appFolders = appFolders.concat prefs.get 'dirs', []
-    foldersLeft = appFolders.length
-
-    for appFolder in appFolders
-        walkOpt = prefs.get 'walk', no_recurse: true
-        walk = walkdir slash.resolve(appFolder), walkOpt
-        walk.on 'error', (err) -> log "[ERROR] findApps -- #{err}"
-        walk.on 'end', ->
-            foldersLeft -= 1
-            if foldersLeft == 0
-                sortKeys()
-        walk.on 'directory', (dir) ->
-            if slash.ext(dir) == 'app'
-                name = slash.base dir
-                apps[name] = dir
+        scripts = scr.macScripts()
+        appFind = require './appfind'
+        appFind (appl) -> 
+            apps = appl
+            sortKeys()
+            
 

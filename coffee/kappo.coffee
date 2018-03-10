@@ -7,7 +7,7 @@
 ###
 
 { childIndex, setStyle, keyinfo, history, valid, empty, childp,
-  scheme, clamp, prefs, post, elem, fs, slash, log, pos, sw, $, _ } = require 'kxk'
+  scheme, clamp, prefs, post, elem, fs, slash, log, error, pos, sw, $, _ } = require 'kxk'
 
 pkg          = require '../package.json'
 fuzzy        = require 'fuzzy'
@@ -85,9 +85,17 @@ openCurrent = ->
         else
             childp.exec "open -a \"#{apps[currentName]}\"", (err) ->
                 if err? then log "[ERROR] can't open #{apps[currentName]} #{err}"
-    else
-        childp.exec scripts[currentName].exec, (err) ->
-            if err? then log "[ERROR] can't execute script #{scripts[currentName]}: #{err}"
+                
+    else if scripts[currentName]?
+        
+        if scripts[currentName].exec?
+            
+            childp.exec scripts[currentName].exec, (err) ->
+                if err? then log "[ERROR] can't execute script #{scripts[currentName]}: #{err}"
+                
+        else
+            post.toMain 'runScript', currentName
+            win.hide()
 
 blacklist = ->
 

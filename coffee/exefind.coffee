@@ -36,10 +36,10 @@ exeFind = (cb) ->
             # C:/Users/kodi/s/konrad/app/konrad-win32-x64/konrad.exe
     
     # dirs
-        # C:/Users/t.kohnhorst/shell/bin
+            # C:/Users/t.kohnhorst/shell/bin
     # apps
-        # C:/Users/t.kohnhorst/s/konrad/app/konrad-win32-x64/konrad.exe
-        # C:/Program Files (x86)/Microsoft Visual Studio 14.0/Common7/IDE/devenv.exe
+            # C:/Users/t.kohnhorst/s/konrad/app/konrad-win32-x64/konrad.exe
+            # C:/Program Files (x86)/Microsoft Visual Studio 14.0/Common7/IDE/devenv.exe
 
     ignore = prefs.get 'ignore', []
     foldersLeft = dirs.length
