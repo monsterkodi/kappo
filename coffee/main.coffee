@@ -183,11 +183,19 @@ onWinResize = (event) ->
 
 showAbout = ->
     
-    color = prefs.get('scheme', 'bright') and '#fff' or '#222'
+    if prefs.get('scheme', 'bright') == 'bright'
+        color = '#fff'
+        textc = '#ddd'
+        highl = '#000'
+    else
+        textc = '#444'
+        highl = '#fff'
+        color = '#111'
+        
     about
         img:        "#{__dirname}/../img/about.png"
-        color:      "#ddd"
-        highlight:  "#000"
+        color:      textc
+        highlight:  highl
         background: color
         size:       200
         pkg:        pkg
