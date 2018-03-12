@@ -143,7 +143,8 @@ createWindow = ->
         alwaysOnTop:     true
         movable:         true
         resizable:       true
-        backgroundColor: '#181818'
+        transparent:     true
+        # backgroundColor: '#181818'
         frame:           false
         maximizable:     false
         minimizable:     false
