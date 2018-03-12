@@ -88,6 +88,17 @@ openCurrent = ->
                 
     else if scripts[currentName]?
         
+        if scripts[currentName].foreground?
+            
+            appHist.add currentName
+            prefs.set 'history', appHist.list
+            
+            if slash.win()
+                { foreground } = require 'wxw'
+                if not empty foreground scripts[currentName].foreground
+                    win.hide()
+                    return
+        
         if scripts[currentName].exec?
             
             childp.exec scripts[currentName].exec, (err) ->
@@ -122,7 +133,10 @@ currentApp = (e, appName) ->
 
     # log 'currentApp appName:', appName, 'currentName:', currentName
 
-    if currentName.toLowerCase() == appName.toLowerCase() and appHist.previous()
+    lastMatches = currentName.toLowerCase() == appName.toLowerCase()
+    scriptMatches = scripts[currentName]?.foreground? and slash.base(scripts[currentName].foreground).toLowerCase() == appName.toLowerCase()
+        
+    if (lastMatches or scriptMatches) and appHist.previous()
         doSearch appHist.previous()
         search = ''
     else

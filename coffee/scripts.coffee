@@ -34,6 +34,10 @@ winScripts = () ->
         restart:
             exec:   'shutdown /r /t 0'
             img:    slash.resolve "#{__dirname}/../scripts/restart.png"
+        terminal:
+            exec:   "C:/msys64/usr/bin/mintty.exe -i #{slash.resolve "#{__dirname}/../scripts/terminal.ico"} -e C:/msys64/usr/bin/fish.exe"
+            img:    slash.resolve "#{__dirname}/../scripts/terminal.png"
+            foreground: "C:/msys64/usr/bin/mintty.exe"
     scripts
 
 macScripts = () ->
