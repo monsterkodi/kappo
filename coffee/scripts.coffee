@@ -35,7 +35,7 @@ winScripts = () ->
             exec:   'shutdown /r /t 0'
             img:    slash.resolve "#{__dirname}/../scripts/restart.png"
         terminal:
-            exec:   "C:/msys64/usr/bin/mintty.exe -i #{slash.resolve "#{__dirname}/../scripts/terminal.ico"} -e C:/msys64/usr/bin/fish.exe"
+            exec:   "C:/msys64/usr/bin/mintty.exe -i #{slash.resolve "#{__dirname}/../scripts/terminal.ico"} -o 'AppLaunchCmd=C:\msys64\mingw64.exe' -o 'AppID=MSYS2.Shell.MINGW64.9' -o 'AppName=fish' -t 'fish' --  /usr/bin/sh -lc   fish"
             img:    slash.resolve "#{__dirname}/../scripts/terminal.png"
             foreground: "C:/msys64/usr/bin/mintty.exe"
     scripts
