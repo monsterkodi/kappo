@@ -6,7 +6,7 @@
 000   000  000   000  000        000         0000000
 ###
 
-{ childIndex, setStyle, keyinfo, history, valid, empty, childp,
+{ childIndex, setStyle, stopEvent, keyinfo, history, valid, empty, childp,
   scheme, clamp, prefs, post, elem, fs, slash, log, error, pos, sw, $, _ } = require 'kxk'
 
 pkg          = require '../package.json'
@@ -40,25 +40,37 @@ post.on 'slog', (text) ->
 # 000   000  000  000  0000  000 0 000  000   000  000  000  0000
 # 00     00  000  000   000  000   000  000   000  000  000   000
 
-winMain = () ->
+winMain = ->
 
     window.win = win
 
-    ipc.on 'clearSearch', clearSearch
-    ipc.on 'currentApp',  currentApp
-
+    ipc.on 'clearSearch',  clearSearch
+    ipc.on 'currentApp',   currentApp
+    ipc.on 'openCurrent',  openCurrent
+    ipc.on 'fade', ->
+        [x,y] = win.getPosition()     # enable smooth fade on windows:
+        win.setPosition -10000,-10000 # move window offscreen before show
+        win.show()
+        $('#main').classList.remove 'fade'
+        $('#main').style.opacity = 0
+        restore = -> 
+            win.setPosition x,y
+            $('#main').classList.add 'fade'
+        setTimeout restore, 30
+        
     prefs.init()
 
     { apps, scripts, allKeys } = post.get 'apps'
-
-    # log 'winMain', allKeys
 
     appHist = new history
         list:      prefs.get 'history', []
         maxLength: prefs.get 'maxHistoryLength', 10
 
     scheme.set prefs.get 'scheme', 'bright'
-
+    
+winHide = -> 
+    win.hide()
+    
 #  0000000   00000000   00000000  000   000
 # 000   000  000   000  000       0000  000
 # 000   000  00000000   0000000   000 0 000
@@ -67,6 +79,7 @@ winMain = () ->
 
 openCurrent = ->
 
+    log 'openCurrent', current
     if current > 0 and search.length
         prefs.set "search:#{search}:#{currentName}", 1 + prefs.get "search:#{search}:#{currentName}", 0
 
@@ -78,9 +91,9 @@ openCurrent = ->
         if slash.win()
 
             launch = require './winlaunch'
-             
+            log 'launch', currentName
             if launch apps[currentName]
-                win.hide()
+                winHide()
 
         else
             childp.exec "open -a \"#{apps[currentName]}\"", (err) ->
@@ -96,7 +109,7 @@ openCurrent = ->
             if slash.win()
                 { foreground } = require 'wxw'
                 if not empty foreground scripts[currentName].foreground
-                    win.hide()
+                    winHide()
                     return
         
         if scripts[currentName].exec?
@@ -106,22 +119,7 @@ openCurrent = ->
                 
         else
             post.toMain 'runScript', currentName
-            win.hide()
-
-blacklist = ->
-
-    ignore = prefs.get 'ignore', []
-    
-    _.pull ignore, apps[currentName]
-    ignore.push    apps[currentName]
-    
-    prefs.set 'ignore', ignore
-    
-    delete apps[currentName]
-    
-    results.splice current, 1
-    
-    select current
+            winHide()
 
 #  0000000  000   000  00000000   00000000   00000000  000   000  000000000
 # 000       000   000  000   000  000   000  000       0000  000     000
@@ -145,6 +143,8 @@ currentApp = (e, appName) ->
         selectName name if not empty name
         search = ''
         $('appname').innerHTML = name
+        
+    $('#main').classList.add 'fade'
 
 currentIsApp = => not currentIsScript()
 currentIsScript = -> results[current]?.script?
@@ -177,8 +177,6 @@ openInFinder = () ->
 
 clearSearch = ->
 
-    log 'clearSearch'
-
     if results.length
         search = ''
         results = [results[Math.min current, results.length-1]]
@@ -188,7 +186,8 @@ clearSearch = ->
         showDots()
     else
         doSearch ''
-    win.show()
+    log 'clearSearch show'
+    # win.show()
 
 # 000   0000000   0000000   000   000
 # 000  000       000   000  0000  000
@@ -212,7 +211,6 @@ getAppIcon = (appName) ->
         cb:      setIcon
 
 setIcon = (iconPath) ->
-
     $('appicon').style.backgroundImage = "url(#{slash.fileUrl iconPath})"
 
 #  0000000  00000000  000      00000000   0000000  000000000
@@ -222,7 +220,6 @@ setIcon = (iconPath) ->
 # 0000000   00000000  0000000  00000000   0000000     000
 
 select = (index) =>
-    # log 'select', index
     current = (index + results.length) % results.length
     if not results[current]?
         log 'dafuk? index:', index, 'results:', results
@@ -236,7 +233,6 @@ select = (index) =>
         getScriptIcon currentName
 
 selectName = (name) ->
-    # log 'selectName', name
     select results.findIndex (r) ->
         r.name.toLowerCase() == name.toLowerCase()
 
@@ -271,6 +267,27 @@ showDots = ->
             dot.classList.add 'current'
         dotr.appendChild dot
 
+# 0000000    000       0000000    0000000  000   000  000      000   0000000  000000000  
+# 000   000  000      000   000  000       000  000   000      000  000          000     
+# 0000000    000      000000000  000       0000000    000      000  0000000      000     
+# 000   000  000      000   000  000       000  000   000      000       000     000     
+# 0000000    0000000  000   000   0000000  000   000  0000000  000  0000000      000     
+
+blacklist = ->
+
+    ignore = prefs.get 'ignore', []
+    
+    _.pull ignore, apps[currentName]
+    ignore.push    apps[currentName]
+    
+    prefs.set 'ignore', ignore
+    
+    delete apps[currentName]
+    
+    results.splice current, 1
+    
+    select current
+    
 #  0000000  00000000   0000000   00000000    0000000  000   000
 # 000       000       000   000  000   000  000       000   000
 # 0000000   0000000   000000000  0000000    000       000000000
@@ -311,9 +328,11 @@ complete  = (key) -> doSearch search + key
 backspace =       -> doSearch search.substr 0, search.length-1
 
 cancelSearchOrClose = ->
+    
     if search.length
         doSearch ''
     else
+        # win.hide()
         ipc.send 'cancel'
 
 clickID = downID = 0
@@ -321,8 +340,12 @@ window.onmousedown = (e) -> clickID += 1 ; downID = clickID
 window.onmouseup = (e) -> openCurrent() if downID == clickID
 window.onmousemove = (e) -> if e.buttons then downID = -1
 window.onunload = -> document.onkeydown = null
-window.onblur   = -> win.hide()
+window.onblur   = -> winHide()
 window.onresize = -> showDots()
+
+# win.on 'ready-to-show', -> log 'win.on ready-to-show'
+# win.on 'show', -> log 'win.on show'
+# win.on 'hide', -> log 'win.on hide'
 
 wheelAccu = 0
 window.onwheel  = (event) ->
@@ -370,6 +393,8 @@ minimizeWindow   = -> win.setBounds x:screenSize().width/2-100, y:0, width:200, 
 maximizeWindow   = -> win.setBounds x:screenSize().width/2-300, y:0, width:600, height:600
 toggleWindowSize = -> if win.getBounds().width > 200 then minimizeWindow() else maximizeWindow()
 
+preventKeyRepeat = -> log 'keyRepeat ahead!'
+
 # 000   000  00000000  000   000
 # 000  000   000        000 000
 # 0000000    0000000     00000
@@ -384,9 +409,8 @@ document.onkeydown = (event) ->
         complete key
         return
 
-    # log 'combo', combo
-
     switch combo
+        when 'f1'                                           then preventKeyRepeat()
         when 'delete'                                       then blacklist()
         when 'backspace'                                    then backspace()
         when 'command+backspace',       'ctrl+backspace'    then doSearch ''

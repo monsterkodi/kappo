@@ -65,7 +65,6 @@ getActiveApp = ->
         wxwInfo = wxw.wininfo activeWin
         if wxwInfo?.path?
             appName = activeApp = slash.base wxwInfo.path
-        # log 'activeApp: ', activeApp
     else
         activeApp = childp.execSync "#{__dirname}/../bin/appswitch -P"
 
@@ -74,16 +73,16 @@ getActiveApp = ->
             win.webContents.send 'currentApp', appName
         else
             win.webContents.send 'clearSearch'
+        win.webContents.send 'fade'
     else
         createWindow()
 
 activateApp = ->
 
     if slash.win()
-        # log "activate: #{activeApp}}"
         if activeWin
             wxw = require 'wxw'
-            wxw.foreground activeWin
+            wxw.foreground wxw.wininfo(activeWin).path
         win?.hide()
     else
 
@@ -99,16 +98,16 @@ activateApp = ->
 #00     00  000  000   000  0000000     0000000   00     00
 
 toggleWindow = ->
-
+    
     if win?.isVisible()
-        activateApp()
+        win.webContents.send 'openCurrent'
+        # activateApp()
     else
         if slash.win()
             if not win?
                 createWindow()
             else
                 getActiveApp()
-                win.show()
                 win.focus()
         else
             osascript = require 'osascript'
@@ -125,12 +124,9 @@ toggleWindow = ->
                 createWindow()
             else
                 getActiveApp()
-                win.show()
                 win.focus()
 
 reloadWindow = -> win.webContents.reloadIgnoringCache()
-
-showWindow = -> getActiveApp()
 
 createWindow = ->
 
@@ -144,7 +140,6 @@ createWindow = ->
         movable:         true
         resizable:       true
         transparent:     true
-        # backgroundColor: '#181818'
         frame:           false
         maximizable:     false
         minimizable:     false
@@ -165,7 +160,6 @@ createWindow = ->
         getActiveApp()
         if args.debug
             win.webContents.openDevTools()
-        win.show()
     win
 
 saveBounds = -> if win? then prefs.set 'bounds', win.getBounds()
@@ -173,6 +167,7 @@ saveBounds = -> if win? then prefs.set 'bounds', win.getBounds()
 squareTimer = null
 
 onWinResize = (event) ->
+    
     clearTimeout squareTimer
     adjustSize = ->
         b = win.getBounds()

@@ -22,7 +22,7 @@ fill-abs()
 
 *
     outline-width       0
-    
+
 body
     fill-abs()
     margin              0
@@ -32,7 +32,7 @@ body
     cursor              pointer
     -webkit-user-select none
     -webkit-app-region  drag
-
+    
 // 00     00   0000000   000  000   000  
 // 000   000  000   000  000  0000  000  
 // 000000000  000000000  000  000 0 000  
@@ -44,7 +44,26 @@ body
     border-radius       6px
     overflow            hidden
     pointer-events      auto
-            
+
+// 00000000   0000000   0000000    00000000  
+// 000       000   000  000   000  000       
+// 000000    000000000  000   000  0000000   
+// 000       000   000  000   000  000       
+// 000       000   000  0000000    00000000  
+    
+@keyframes fadein
+  0% 
+    opacity 0
+  50%
+    opacity 0
+  100%
+    opacity 1
+
+.fade
+    animation           fadein 0.3s
+    animation-fill-mode forwards
+    animation-timing-function ease-in
+    
 //  0000000   00000000   00000000   
 // 000   000  000   000  000   000  
 // 000000000  00000000   00000000   
