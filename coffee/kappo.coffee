@@ -27,7 +27,7 @@ scripts      = {}
 allKeys      = []
 search       = ''
 currentName  = ''
-current      = 0
+currentIndex = 0
 
 post.on 'slog', (text) ->
 
@@ -79,13 +79,12 @@ winHide = ->
 
 openCurrent = ->
 
-    if current > 0 and search.length
+    if currentIndex > 0 and search.length
         prefs.set "search:#{search}:#{currentName}", 1 + prefs.get "search:#{search}:#{currentName}", 0
 
     if currentIsApp()
 
-        appHist.add currentName
-        prefs.set 'history', appHist.list
+        addToHistory()
         
         if slash.win()
 
@@ -101,8 +100,7 @@ openCurrent = ->
         
         if scripts[currentName].foreground?
             
-            appHist.add currentName
-            prefs.set 'history', appHist.list
+            addToHistory()
             
             if slash.win()
                 { foreground } = require 'wxw'
@@ -146,7 +144,7 @@ currentApp = (e, appName) ->
     $('#main').classList.add 'fade'
 
 currentIsApp = => not currentIsScript()
-currentIsScript = -> results[current]?.script?
+currentIsScript = -> results[currentIndex]?.script?
 
 # 000   000  000   0000000  000000000   0000000   00000000   000   000
 # 000   000  000  000          000     000   000  000   000   000 000
@@ -158,13 +156,22 @@ listHistory = (offset=0) ->
     
     results = []
     for h in appHist.list
-        results.push string: h, name: h
+        result = _.clone h
+        result.string ?= result.name
+        results.push result
     index = results.length - 1 - offset
-    log 'index', index, results.length - 1 - offset
     select index
     showDots()
 
+addToHistory = ->
+    
+    result = _.clone results[currentIndex]
+    delete result.string
+    appHist.add result
+    prefs.set 'history', appHist.list
+    
 openInFinder = () ->
+    
     childp.spawn 'osascript', [
         '-e', 'tell application "Finder"',
         '-e', "reveal POSIX file \"#{apps[currentName]}\"",
@@ -181,15 +188,13 @@ clearSearch = ->
 
     if results.length
         search = ''
-        results = [results[Math.min current, results.length-1]]
+        results = [results[Math.min currentIndex, results.length-1]]
         results[0].string = currentName
         $('appname').innerHTML = currentName
-        current = 0
+        currentIndex = 0
         showDots()
     else
         doSearch ''
-    log 'clearSearch show'
-    # win.show()
 
 # 000   0000000   0000000   000   000
 # 000  000       000   000  0000  000
@@ -222,13 +227,13 @@ setIcon = (iconPath) ->
 # 0000000   00000000  0000000  00000000   0000000     000
 
 select = (index) =>
-    current = (index + results.length) % results.length
-    if not results[current]?
+    currentIndex = (index + results.length) % results.length
+    if not results[currentIndex]?
         log 'dafuk? index:', index, 'results:', results
-    currentName = results[current].name
-    $('appname').innerHTML = results[current].string
+    currentName = results[currentIndex].name
+    $('appname').innerHTML = results[currentIndex].string
     $('.current')?.classList.remove 'current'
-    $("dot_#{current}")?.classList.add 'current'
+    $("dot_#{currentIndex}")?.classList.add 'current'
     if currentIsApp()
         getAppIcon currentName
     else
@@ -265,7 +270,7 @@ showDots = ->
 
     for i in [0...results.length]
         dot = elem 'span', class:'appdot', id: "dot_#{i}"
-        if i == current
+        if i == currentIndex
             dot.classList.add 'current'
         dotr.appendChild dot
 
@@ -286,9 +291,9 @@ blacklist = ->
     
     delete apps[currentName]
     
-    results.splice current, 1
+    results.splice currentIndex, 1
     
-    select current
+    select currentIndex
     
 #  0000000  00000000   0000000   00000000    0000000  000   000
 # 000       000       000   000  000   000  000       000   000
@@ -334,7 +339,6 @@ cancelSearchOrClose = ->
     if search.length
         doSearch ''
     else
-        # win.hide()
         ipc.send 'cancel'
 
 clickID = downID = 0
@@ -353,10 +357,10 @@ wheelAccu = 0
 window.onwheel  = (event) ->
     wheelAccu += (event.deltaX + event.deltaY)/44
     if wheelAccu > 1
-        select current+1 % results.length
+        select currentIndex+1 % results.length
         wheelAccu -= 1
     else if wheelAccu < -1
-        select current+results.length-1 % results.length
+        select currentIndex+results.length-1 % results.length
         wheelAccu += 1
 
 #  0000000  000  0000000  00000000
@@ -418,8 +422,8 @@ document.onkeydown = (event) ->
         when 'command+backspace',       'ctrl+backspace'    then doSearch ''
         when 'command+i', 'ctrl+i'                          then scheme.toggle()
         when 'esc'                                          then cancelSearchOrClose()
-        when 'down', 'right'                                then select current+1
-        when 'up'  , 'left'                                 then select current-1
+        when 'down', 'right'                                then select currentIndex+1
+        when 'up'  , 'left'                                 then select currentIndex-1
         when 'enter'                                        then openCurrent()
         when 'command+alt+i',           'ctrl+alt+i'        then win.webContents.openDevTools()
         when 'command+=',               'ctrl+='            then biggerWindow()

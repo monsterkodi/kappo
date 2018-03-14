@@ -36,12 +36,24 @@ exeFind = (cb) ->
             # C:/Users/kodi/s/konrad/app/konrad-win32-x64/konrad.exe
             # C:/Program Files (x86)/Microsoft Visual Studio 14.0/Common7/IDE/devenv.exe
 
+    ignoreDefaults = require '../bin/ignore'
+
+    ignoredByDefault = (file) ->
+        file = file.toLowerCase()
+        for start in ignoreDefaults.startsWith
+            return true if file.startsWith start
+        for contains in ignoreDefaults.contains
+            return true if file.indexOf(contains) >= 0
+        for match in ignoreDefaults.matches
+            return true if file == match
+        false
+            
     ignore = prefs.get 'ignore', []
     foldersLeft = dirs.length
 
     for exeFolder in dirs
         
-        log 'search', exeFolder
+        # log 'search', exeFolder
         
         walkOpt = prefs.get 'walk', no_recurse: false, max_depth: 3
         walk = walkdir slash.resolve(exeFolder), walkOpt
@@ -52,7 +64,7 @@ exeFind = (cb) ->
 
             foldersLeft -= 1
             if foldersLeft == 0
-                log "found: #{_.size apps}"
+                # log "found: #{_.size apps}"
                 cb? apps
 
         walk.on 'file', (file) ->
@@ -60,7 +72,10 @@ exeFind = (cb) ->
             file = slash.resolve file
             if slash.ext(file) == 'exe'
                 name = slash.base file
-                if file not in ignore
-                    apps[name] = file
+                if file not in ignore and not ignoredByDefault name
+                    if not apps[name]?
+                        apps[name] = file
+                    # else
+                        # log 'duplicate?', file, '->', apps[name] 
 
 module.exports = exeFind
