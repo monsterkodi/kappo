@@ -48,15 +48,25 @@ winMain = ->
     ipc.on 'currentApp',   currentApp
     ipc.on 'openCurrent',  openCurrent
     ipc.on 'fade', ->
+        
         [x,y] = win.getPosition()     # enable smooth fade on windows:
         win.setPosition -10000,-10000 # move window offscreen before show
         win.show()
         $('#main').classList.remove 'fade'
         $('#main').style.opacity = 0
+        
         restore = -> 
-            win.setPosition x,y
+            
+            if x < -10 or y < -10 # key repeat hickup 'fix'
+                b = win.getBounds()
+                x = (screenSize().width - b.width)/2
+                y = 0
+            else
+                win.setPosition x,y
+                
             $('#main').classList.add 'fade'
-        setTimeout restore, 30
+            
+        setTimeout restore, 30       # give windows some time to do it's flickering
         
     prefs.init()
 
@@ -342,9 +352,9 @@ cancelSearchOrClose = ->
         ipc.send 'cancel'
 
 clickID = downID = 0
-window.onmousedown = (e) -> clickID += 1 ; downID = clickID
-window.onmouseup = (e) -> openCurrent() if downID == clickID
-window.onmousemove = (e) -> if e.buttons then downID = -1
+window.onmousedown  = (e) -> clickID += 1 ; downID = clickID
+window.onmouseup    = (e) -> openCurrent() if downID == clickID
+window.onmousemove  = (e) -> if e.buttons then downID = -1
 window.onunload = -> document.onkeydown = null
 window.onblur   = -> winHide()
 window.onresize = -> showDots()
@@ -358,10 +368,12 @@ window.onwheel  = (event) ->
     wheelAccu += (event.deltaX + event.deltaY)/44
     if wheelAccu > 1
         select currentIndex+1 % results.length
-        wheelAccu -= 1
+        while wheelAccu > 1
+            wheelAccu -= 1
     else if wheelAccu < -1
         select currentIndex+results.length-1 % results.length
-        wheelAccu += 1
+        while wheelAccu < -1
+            wheelAccu += 1
 
 #  0000000  000  0000000  00000000
 # 000       000     000   000
