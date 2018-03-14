@@ -79,7 +79,6 @@ winHide = ->
 
 openCurrent = ->
 
-    log 'openCurrent', current
     if current > 0 and search.length
         prefs.set "search:#{search}:#{currentName}", 1 + prefs.get "search:#{search}:#{currentName}", 0
 
@@ -91,7 +90,6 @@ openCurrent = ->
         if slash.win()
 
             launch = require './winlaunch'
-            log 'launch', currentName
             if launch apps[currentName]
                 winHide()
 
@@ -135,7 +133,8 @@ currentApp = (e, appName) ->
     scriptMatches = scripts[currentName]?.foreground? and slash.base(scripts[currentName].foreground).toLowerCase() == appName.toLowerCase()
         
     if (lastMatches or scriptMatches) and appHist.previous()
-        doSearch appHist.previous()
+        # doSearch appHist.previous()
+        listHistory 1
         search = ''
     else
         name = currentName
@@ -155,11 +154,14 @@ currentIsScript = -> results[current]?.script?
 # 000   000  000       000     000     000   000  000   000     000
 # 000   000  000  0000000      000      0000000   000   000     000
 
-listHistory = () ->
+listHistory = (offset=0) ->
+    
     results = []
     for h in appHist.list
         results.push string: h, name: h
-    select results.length-1
+    index = results.length - 1 - offset
+    log 'index', index, results.length - 1 - offset
+    select index
     showDots()
 
 openInFinder = () ->
@@ -423,7 +425,7 @@ document.onkeydown = (event) ->
         when 'command+=',               'ctrl+='            then biggerWindow()
         when 'command+-',               'ctrl+-'            then smallerWindow()
         when 'command+r',               'ctrl+r'            then findApps()
-        when 'command+h',               'ctrl+h'            then listHistory()
+        when 'command+h',               'alt+h'             then listHistory()
         when 'command+f',               'ctrl+f'            then openInFinder()
         when 'command+up',              'ctrl+up'           then moveWindow 0,-20
         when 'command+down',            'ctrl+down'         then moveWindow 0, 20
