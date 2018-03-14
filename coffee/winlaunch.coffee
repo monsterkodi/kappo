@@ -17,9 +17,15 @@ winLaunch = (exePath) ->
         
         return focusWins:focusWins
         
+    if "cmd" == slash.base exePath
+        args = ['cmd', '/k']
+        exePath = 'start'
+        childp.exec "start cmd /k", detached: true, stdio: 'ignore', shell: shell
+        return
+        
     subprocess = childp.spawn "\"#{exePath}\"", [], detached: true, stdio: 'ignore', shell: true
     subprocess.on 'error', (err) ->
-        error 'winLaunch -- failed to start subprocess.'
+        error "winLaunch -- failed to start subprocess #{exePath} #{args.join ' '}."
         
     return subprocess:subprocess
 
