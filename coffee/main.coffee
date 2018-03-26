@@ -111,13 +111,12 @@ toggleWindow = ->
                 win.focus()
         else
             osascript = require 'osascript'
-            script = osascript """
+            name = osascript """
             tell application "System Events"
                 set n to name of first application process whose frontmost is true
             end tell
             do shell script "echo " & n
             """
-            name = childp.execSync "osascript #{script}"
             appName = String(name).trim()
 
             if not win?
