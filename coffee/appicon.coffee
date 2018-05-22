@@ -39,7 +39,7 @@ class AppIcon
             if not err?
                 if obj['CFBundleIconFile']?
                     icnsPath = slash.join slash.dirname(infoPath), 'Resources', obj['CFBundleIconFile']
-                    icnsPath += ".icns" if not icnsslash.endsWith '.icns'
+                    icnsPath += ".icns" if not icnsPath.endsWith '.icns'
                     AppIcon.saveIcon icnsPath, opt
                 else
                     AppIcon.brokenIcon opt

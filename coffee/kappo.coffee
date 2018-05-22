@@ -49,6 +49,10 @@ winMain = ->
     ipc.on 'openCurrent',  openCurrent
     ipc.on 'fade', ->
         
+        if not slash.win()
+            win.show()
+            return 
+            
         [x,y] = win.getPosition()     # enable smooth fade on windows:
         win.setPosition -10000,-10000 # move window offscreen before show
         win.show()

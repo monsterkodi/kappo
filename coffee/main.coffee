@@ -6,7 +6,7 @@
 000   000  000   000  000  000   000
 ###
 
-{ walkdir, about, karg, childp, prefs, post, karg, slash, log, fs, _ } = require 'kxk'
+{ walkdir, about, karg, childp, prefs, post, karg, slash, str, log, fs, _ } = require 'kxk'
 
 pkg           = require '../package.json'
 electron      = require 'electron'
@@ -101,7 +101,7 @@ toggleWindow = ->
     
     if win?.isVisible()
         win.webContents.send 'openCurrent'
-        # activateApp()
+        activateApp() if not slash.win()
     else
         if slash.win()
             if not win?
@@ -110,20 +110,19 @@ toggleWindow = ->
                 getActiveApp()
                 win.focus()
         else
-            osascript = require 'osascript'
-            name = osascript """
-            tell application "System Events"
-                set n to name of first application process whose frontmost is true
-            end tell
-            do shell script "echo " & n
-            """
-            appName = String(name).trim()
-
-            if not win?
-                createWindow()
-            else
-                getActiveApp()
-                win.focus()
+            osascript = require('osascript').eval
+            osascript """
+                tell application "System Events"
+                    set n to name of first application process whose frontmost is true
+                end tell
+                do shell script "echo " & n
+                """, type:'AppleScript', (err,name) ->
+                    appName = String(name).trim()
+                    if not win?
+                        createWindow()
+                    else
+                        getActiveApp()
+                        win.focus()
 
 reloadWindow = -> win.webContents.reloadIgnoringCache()
 

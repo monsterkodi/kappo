@@ -6,11 +6,11 @@
 000   000  000        000        000       000  000   000  0000000    
 ###
 
-{ walkdir, prefs, slash } = require 'kxk'
+{ walkdir, prefs, slash, log, _ } = require 'kxk'
 
 appFind = (cb) ->
 
-    apps = []
+    apps = {}
     apps['Finder'] = "/System/Library/CoreServices/Finder.app"
     appFolders = [
         "/Applications"
@@ -18,7 +18,7 @@ appFind = (cb) ->
         ]
     appFolders = appFolders.concat prefs.get 'dirs', []
     foldersLeft = appFolders.length
-
+    
     for appFolder in appFolders
         walkOpt = prefs.get 'walk', no_recurse: true
         walk = walkdir slash.resolve(appFolder), walkOpt
@@ -26,6 +26,7 @@ appFind = (cb) ->
         walk.on 'end', ->
             foldersLeft -= 1
             if foldersLeft == 0
+                # log "found: #{_.size apps}"
                 cb apps
         walk.on 'directory', (dir) ->
             if slash.ext(dir) == 'app'
