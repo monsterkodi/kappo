@@ -335,7 +335,8 @@ doSearch = (s) ->
     if results.length
         if s == ''
             if slash.win()
-                selectName 'explorer'
+                # selectName 'explorer'
+                selectName 'terminal'
             else
                 selectName 'Finder'
         else
@@ -362,10 +363,6 @@ window.onmousemove  = (e) -> if e.buttons then downID = -1
 window.onunload = -> document.onkeydown = null
 window.onblur   = -> winHide()
 window.onresize = -> showDots()
-
-# win.on 'ready-to-show', -> log 'win.on ready-to-show'
-# win.on 'show', -> log 'win.on show'
-# win.on 'hide', -> log 'win.on hide'
 
 wheelAccu = 0
 window.onwheel  = (event) ->

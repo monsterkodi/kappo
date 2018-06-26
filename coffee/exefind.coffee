@@ -53,7 +53,6 @@ exeFind = (cb) ->
 
             foldersLeft -= 1
             if foldersLeft == 0
-                # log "found: #{_.size apps}"
                 cb? apps
 
         walk.on 'file', (file) ->
@@ -64,7 +63,5 @@ exeFind = (cb) ->
                 if file not in ignore and not ignoredByDefault name
                     if not apps[name]?
                         apps[name] = file
-                    # else
-                        # log 'duplicate?', file, '->', apps[name] 
 
 module.exports = exeFind

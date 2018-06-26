@@ -291,5 +291,9 @@ app.on 'ready', ->
         appFind (appl) -> 
             apps = appl
             sortKeys()
-            
+     
+    createWindow()
+    
+    hideWin = -> win?.hide()
+    setTimeout hideWin, 2500
 
