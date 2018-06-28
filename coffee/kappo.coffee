@@ -169,10 +169,11 @@ currentIsScript = -> results[currentIndex]?.script?
 listHistory = (offset=0) ->
     
     results = []
-    for h in appHist.list
-        result = _.clone h
-        result.string ?= result.name
-        results.push result
+    if valid appHist
+        for h in appHist.list
+            result = _.clone h
+            result.string ?= result.name
+            results.push result
     index = results.length - 1 - offset
     select index
     showDots()
@@ -242,8 +243,9 @@ setIcon = (iconPath) ->
 
 select = (index) =>
     currentIndex = (index + results.length) % results.length
-    if not results[currentIndex]?
+    if empty results[currentIndex]
         log 'dafuk? index:', index, 'results:', results
+        return
     currentName = results[currentIndex].name
     $('appname').innerHTML = results[currentIndex].string
     $('.current')?.classList.remove 'current'
@@ -254,8 +256,10 @@ select = (index) =>
         getScriptIcon currentName
 
 selectName = (name) ->
+    
+    return if empty name
     select results.findIndex (r) ->
-        r.name.toLowerCase() == name.toLowerCase()
+        r?.name.toLowerCase() == name.toLowerCase()
 
 #   0000000     0000000   000000000   0000000
 #   000   000  000   000     000     000
