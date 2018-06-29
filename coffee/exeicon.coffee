@@ -34,7 +34,10 @@ class ExeIcon
         appPath = opt.appPath
         pngPath = ExeIcon.pngPath opt
         
+        log 'getIcon', appPath, pngPath
+        
         any2Ico = slash.path __dirname + '/../bin/Quick_Any2Ico.exe'
+        
         if slash.isFile any2Ico
             
             childp.exec "#{any2Ico} -formats=512 \"-res=#{appPath}\" \"-icon=#{pngPath}\"", opt, (err,stdout,stderr) -> 

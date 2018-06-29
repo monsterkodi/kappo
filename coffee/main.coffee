@@ -6,7 +6,7 @@
 000   000  000   000  000  000   000
 ###
 
-{ walkdir, about, args, childp, prefs, post, karg, slash, str, log, fs, _ } = require 'kxk'
+{ post, srcmap, walkdir, about, args, childp, prefs, karg, slash, str, log, fs, _ } = require 'kxk'
 
 pkg           = require '../package.json'
 electron      = require 'electron'
@@ -24,6 +24,13 @@ tray          = null
 apps          = {}
 scripts       = {}
 allKeys       = []
+
+
+process.on 'uncaughtException', (err) ->
+    srcmap.logErr err, '🔻'
+    true
+
+log.slog.icon = slash.fileUrl slash.resolve slash.join __dirname, '..', 'img', 'menu@2x.png'
 
 app.setName pkg.productName
 
@@ -69,7 +76,6 @@ getActiveApp = ->
         
     if win?
         if appName?
-            log 'post currentApp', appName
             post.toWins 'currentApp', appName
         else
             post.toWins 'clearSearch'

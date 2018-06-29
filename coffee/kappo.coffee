@@ -142,15 +142,12 @@ post.on 'openCurrent',  openCurrent
 
 currentApp = (appName) ->
 
-    log 'currentApp appName:', appName, 'currentName:', currentName
-
     currentName   = 'kappo' if empty currentName
     appName       = 'kappo' if empty appName
     lastMatches   = currentName.toLowerCase() == appName.toLowerCase()
     scriptMatches = scripts[currentName]?.foreground? and slash.base(scripts[currentName].foreground).toLowerCase() == appName.toLowerCase()
         
     if (lastMatches or scriptMatches) and appHist.previous()
-        # doSearch appHist.previous()
         listHistory 1
         search = ''
     else
@@ -186,6 +183,8 @@ listHistory = (offset=0) ->
     showDots()
 
 addToHistory = ->
+    
+    return if empty results[currentIndex]
     
     result = _.clone results[currentIndex]
     delete result.string
