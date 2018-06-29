@@ -6,7 +6,7 @@
 000   000  000   000  000  000   000
 ###
 
-{ walkdir, about, karg, childp, prefs, post, karg, slash, str, log, fs, _ } = require 'kxk'
+{ walkdir, about, args, childp, prefs, post, karg, slash, str, log, fs, _ } = require 'kxk'
 
 pkg           = require '../package.json'
 electron      = require 'electron'
@@ -16,7 +16,6 @@ BrowserWindow = electron.BrowserWindow
 Tray          = electron.Tray
 Menu          = electron.Menu
 clipboard     = electron.clipboard
-ipc           = electron.ipcMain
 iconDir       = slash.resolve "#{app.getPath('userData')}/icons"
 
 win           = null
@@ -28,23 +27,21 @@ allKeys       = []
 
 app.setName pkg.productName
 
-args = karg """
-kappo
-    debug  . ? log debug    . = false . - D
-
-version  #{pkg.version}
+args = args.init """
+    verbose     log verbose     false
+    debug       log debug       false  -D
 """
 
-# 000  00000000    0000000
-# 000  000   000  000
-# 000  00000000   000
-# 000  000        000
-# 000  000         0000000
+# 00000000    0000000    0000000  000000000
+# 000   000  000   000  000          000   
+# 00000000   000   000  0000000      000   
+# 000        000   000       000     000   
+# 000         0000000   0000000      000   
 
-ipc.on  'cancel', -> activateApp()
-
+post.on 'cancel', -> activateApp()
 post.on 'winlog', (text) -> log ">>> " + text
 post.on 'runScript', (name) -> scripts[name].cb()
+
 post.onGet 'apps', -> apps: apps, scripts:scripts, allKeys:allKeys
 
 # 0000000    0000000  000000000  000  000   000  00000000
@@ -70,10 +67,10 @@ getActiveApp = ->
 
     if win?
         if appName?
-            win.webContents.send 'currentApp', appName
+            post.toWins 'currentApp', appName
         else
-            win.webContents.send 'clearSearch'
-        win.webContents.send 'fade'
+            post.toWins 'clearSearch'
+        post.toWins 'fade'
     else
         createWindow()
 
@@ -100,7 +97,7 @@ activateApp = ->
 toggleWindow = ->
     
     if win?.isVisible()
-        win.webContents.send 'openCurrent'
+        post.toWins 'openCurrent'
         activateApp() if not slash.win()
     else
         if slash.win()

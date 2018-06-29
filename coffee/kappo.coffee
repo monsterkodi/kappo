@@ -6,8 +6,8 @@
 000   000  000   000  000        000         0000000
 ###
 
-{ childIndex, setStyle, stopEvent, keyinfo, history, valid, empty, childp,
-  scheme, clamp, prefs, post, elem, fs, slash, log, error, pos, sw, $, _ } = require 'kxk'
+{ post, args, srcmap, childIndex, setStyle, stopEvent, keyinfo, history, valid, empty, childp,
+  scheme, clamp, prefs, elem, fs, slash, log, error, pos, sw, $, _ } = require 'kxk'
 
 pkg          = require '../package.json'
 fuzzy        = require 'fuzzy'
@@ -16,7 +16,6 @@ electron     = require 'electron'
 
 clipboard    = electron.clipboard
 browser      = electron.remote.BrowserWindow
-ipc          = electron.ipcRenderer
 win          = electron.remote.getCurrentWindow()
 iconDir      = slash.resolve "#{electron.remote.app.getPath('userData')}/icons"
 
@@ -29,11 +28,6 @@ search       = ''
 currentName  = ''
 currentIndex = 0
 
-post.on 'slog', (text) ->
-
-    console.log 'slog', text
-    post.toMain 'winlog', text
-
 # 000   000  000  000   000  00     00   0000000   000  000   000
 # 000 0 000  000  0000  000  000   000  000   000  000  0000  000
 # 000000000  000  000 0 000  000000000  000000000  000  000 0 000
@@ -42,12 +36,18 @@ post.on 'slog', (text) ->
 
 winMain = ->
 
+    window.onerror = (msg, source, line, col, err) ->
+        srcmap.logErr err
+        true
+    
+    log.slog.icon = slash.fileUrl slash.join __dirname, '..', 'img', 'menu@2x.png'
+    
     window.win = win
 
-    ipc.on 'clearSearch',  clearSearch
-    ipc.on 'currentApp',   currentApp
-    ipc.on 'openCurrent',  openCurrent
-    ipc.on 'fade', ->
+    post.on 'clearSearch',  clearSearch
+    post.on 'currentApp',   currentApp
+    post.on 'openCurrent',  openCurrent
+    post.on 'fade', ->
         
         if not slash.win()
             win.show()
@@ -70,7 +70,7 @@ winMain = ->
                 
             $('#main').classList.add 'fade'
             
-        setTimeout restore, 30       # give windows some time to do it's flickering
+        setTimeout restore, 30 # give windows some time to do it's flickering
         
     prefs.init()
 
@@ -83,7 +83,9 @@ winMain = ->
     scheme.set prefs.get 'scheme', 'bright'
     
 winHide = -> 
-    win.hide()
+    
+    if not args.debug
+        win.hide()
     
 #  0000000   00000000   00000000  000   000
 # 000   000  000   000  000       0000  000
@@ -137,11 +139,13 @@ openCurrent = ->
 # 000       000   000  000   000  000   000  000       000  0000     000
 #  0000000   0000000   000   000  000   000  00000000  000   000     000
 
-currentApp = (e, appName) ->
+currentApp = (appName) ->
 
-    # log 'currentApp appName:', appName, 'currentName:', currentName
+    log 'currentApp appName:', appName, 'currentName:', currentName
 
-    lastMatches = currentName.toLowerCase() == appName.toLowerCase()
+    currentName  ?= 'terminal'
+    appName      ?= 'terminal'
+    lastMatches   = currentName.toLowerCase() == appName.toLowerCase()
     scriptMatches = scripts[currentName]?.foreground? and slash.base(scripts[currentName].foreground).toLowerCase() == appName.toLowerCase()
         
     if (lastMatches or scriptMatches) and appHist.previous()
@@ -358,7 +362,7 @@ cancelSearchOrClose = ->
     if search.length
         doSearch ''
     else
-        ipc.send 'cancel'
+        post.toMain 'cancel'
 
 clickID = downID = 0
 window.onmousedown  = (e) -> clickID += 1 ; downID = clickID
@@ -428,6 +432,8 @@ document.onkeydown = (event) ->
 
     { mod, key, combo, char } = keyinfo.forEvent event
 
+    log combo if args.verbose
+    
     if char? and combo.length == 1
         complete key
         return
@@ -442,7 +448,7 @@ document.onkeydown = (event) ->
         when 'down', 'right'                                then select currentIndex+1
         when 'up'  , 'left'                                 then select currentIndex-1
         when 'enter'                                        then openCurrent()
-        when 'command+alt+i',           'ctrl+alt+i'        then win.webContents.openDevTools()
+        when 'command+alt+i',           'ctrl+alt+i'        then args.debug = true; win.webContents.openDevTools()
         when 'command+=',               'ctrl+='            then biggerWindow()
         when 'command+-',               'ctrl+-'            then smallerWindow()
         when 'command+r',               'ctrl+r'            then findApps()
@@ -454,5 +460,5 @@ document.onkeydown = (event) ->
         when 'command+right',           'ctrl+right'        then moveWindow  20, 0
         when 'command+0','command+o',   'ctrl+0','ctrl+o'   then toggleWindowSize()
 
-winMain()
+win.on 'ready-to-show', -> winMain()
 

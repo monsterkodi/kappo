@@ -1,2 +1,2 @@
 
-![kappo](img/shot.png)
+![readme](img/readme.png)
