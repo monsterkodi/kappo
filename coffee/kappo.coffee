@@ -42,16 +42,15 @@ winMain = ->
     
     log.slog.icon = slash.fileUrl slash.join __dirname, '..', 'img', 'menu@2x.png'
     
+    log 'winMain'
+    
     window.win = win
 
-    post.on 'clearSearch',  clearSearch
-    post.on 'currentApp',   currentApp
-    post.on 'openCurrent',  openCurrent
     post.on 'fade', ->
         
         if not slash.win()
             win.show()
-            return 
+            return
             
         [x,y] = win.getPosition()     # enable smooth fade on windows:
         win.setPosition -10000,-10000 # move window offscreen before show
@@ -133,6 +132,8 @@ openCurrent = ->
             post.toMain 'runScript', currentName
             winHide()
 
+post.on 'openCurrent',  openCurrent
+
 #  0000000  000   000  00000000   00000000   00000000  000   000  000000000
 # 000       000   000  000   000  000   000  000       0000  000     000
 # 000       000   000  0000000    0000000    0000000   000 0 000     000
@@ -143,8 +144,8 @@ currentApp = (appName) ->
 
     log 'currentApp appName:', appName, 'currentName:', currentName
 
-    currentName  ?= 'terminal'
-    appName      ?= 'terminal'
+    currentName   = 'terminal' if empty currentName
+    appName       = 'terminal' if empty appName
     lastMatches   = currentName.toLowerCase() == appName.toLowerCase()
     scriptMatches = scripts[currentName]?.foreground? and slash.base(scripts[currentName].foreground).toLowerCase() == appName.toLowerCase()
         
@@ -160,6 +161,8 @@ currentApp = (appName) ->
         $('appname').innerHTML = name
         
     $('#main').classList.add 'fade'
+
+post.on 'currentApp', currentApp
 
 currentIsApp = => not currentIsScript()
 currentIsScript = -> results[currentIndex]?.script?
@@ -214,6 +217,8 @@ clearSearch = ->
         showDots()
     else
         doSearch ''
+
+post.on 'clearSearch',  clearSearch
 
 # 000   0000000   0000000   000   000
 # 000  000       000   000  0000  000
@@ -343,7 +348,6 @@ doSearch = (s) ->
     if results.length
         if s == ''
             if slash.win()
-                # selectName 'explorer'
                 selectName 'terminal'
             else
                 selectName 'Finder'
@@ -460,5 +464,5 @@ document.onkeydown = (event) ->
         when 'command+right',           'ctrl+right'        then moveWindow  20, 0
         when 'command+0','command+o',   'ctrl+0','ctrl+o'   then toggleWindowSize()
 
-win.on 'ready-to-show', -> winMain()
-
+# win.on 'ready-to-show', -> 
+winMain()

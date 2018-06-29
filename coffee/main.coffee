@@ -65,8 +65,11 @@ getActiveApp = ->
     else
         activeApp = childp.execSync "#{__dirname}/../bin/appswitch -P"
 
+    log 'getActiveApp', appName, activeApp
+        
     if win?
         if appName?
+            log 'post currentApp', appName
             post.toWins 'currentApp', appName
         else
             post.toWins 'clearSearch'
@@ -127,6 +130,7 @@ createWindow = ->
 
     return if win?
 
+    log 'createWindow'
     win = new BrowserWindow
         width:           300
         height:          300
@@ -288,9 +292,9 @@ app.on 'ready', ->
         appFind (appl) -> 
             apps = appl
             sortKeys()
-     
+    
     createWindow()
     
-    hideWin = -> win?.hide()
-    setTimeout hideWin, 2500
+    # hideWin = -> win?.hide()
+    # setTimeout hideWin, 3500
 
