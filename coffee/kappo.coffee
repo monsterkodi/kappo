@@ -144,8 +144,8 @@ currentApp = (appName) ->
 
     log 'currentApp appName:', appName, 'currentName:', currentName
 
-    currentName   = 'terminal' if empty currentName
-    appName       = 'terminal' if empty appName
+    currentName   = 'kappo' if empty currentName
+    appName       = 'kappo' if empty appName
     lastMatches   = currentName.toLowerCase() == appName.toLowerCase()
     scriptMatches = scripts[currentName]?.foreground? and slash.base(scripts[currentName].foreground).toLowerCase() == appName.toLowerCase()
         

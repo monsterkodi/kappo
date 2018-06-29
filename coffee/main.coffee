@@ -295,6 +295,6 @@ app.on 'ready', ->
     
     createWindow()
     
-    # hideWin = -> win?.hide()
-    # setTimeout hideWin, 3500
+    hideWin = -> win?.hide()
+    setTimeout hideWin, 3000
 
