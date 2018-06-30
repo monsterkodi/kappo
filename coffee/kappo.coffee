@@ -344,7 +344,7 @@ doSearch = (s) ->
         r.script = scripts[r.name] if scripts[r.name]
         results.push r
 
-    if results.length
+    if valid results
         if s == ''
             if slash.win()
                 selectName 'terminal'

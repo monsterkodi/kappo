@@ -25,7 +25,6 @@ apps          = {}
 scripts       = {}
 allKeys       = []
 
-
 process.on 'uncaughtException', (err) ->
     srcmap.logErr err, '🔻'
     true
@@ -284,6 +283,9 @@ app.on 'ready', ->
     sortKeys = ->
         allKeys = Object.keys(apps).concat Object.keys(scripts)
         allKeys.sort (a,b) -> a.toLowerCase().localeCompare b.toLowerCase()
+        createWindow()
+        hideWin = -> win?.hide()
+        setTimeout hideWin, 2000
     
     scr = require './scripts'
     if slash.win()
@@ -299,8 +301,4 @@ app.on 'ready', ->
             apps = appl
             sortKeys()
     
-    createWindow()
-    
-    hideWin = -> win?.hide()
-    setTimeout hideWin, 3000
 
