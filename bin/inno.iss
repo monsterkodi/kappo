@@ -1,5 +1,5 @@
 #define MyAppName "kappo"
-#define MyAppVersion "1.26.0"
+#define MyAppVersion "1.28.0"
 #define MyAppPublisher "monsterkodi"
 #define MyAppURL "https://github.com/monsterkodi/kappo"
 #define MyAppExeName "kappo.exe"

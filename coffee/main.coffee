@@ -287,9 +287,7 @@ app.on 'ready', ->
         hideWin = -> win?.hide()
         setTimeout hideWin, 2000
     
-    log 'scr'
     scr = require './scripts'
-    log 'scr', scr.winScripts?
     if slash.win()
         scripts = scr.winScripts()
         log scripts
