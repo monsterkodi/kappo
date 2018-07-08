@@ -6,7 +6,7 @@
 00000000  000   000  00000000        000       000  000   000  0000000
 ###
 
-{ slash, walkdir, prefs, log, _ } = require 'kxk'
+{ post, slash, walkdir, prefs, log, _ } = require 'kxk'
 
 exeFind = (cb) ->
 
@@ -47,12 +47,15 @@ exeFind = (cb) ->
         walkOpt = prefs.get 'walk', no_recurse: false, max_depth: 3
         walk = walkdir slash.resolve(exeFolder), walkOpt
 
-        walk.on 'error', (err) -> log "[ERROR] findExes -- #{err}"
+        walk.on 'error', (err) -> 
+            post.toWins 'mainlog', "walk error #{err.stack}"
+            log "[ERROR] findExes -- #{err}"
 
         walk.on 'end', ->
 
             foldersLeft -= 1
             if foldersLeft == 0
+                post.toWins 'mainlog', "apps #{apps}"
                 cb? apps
 
         walk.on 'file', (file) ->

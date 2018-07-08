@@ -7,7 +7,7 @@ if rm -rf kappo-win32-x64; then
     
     node_modules/.bin/electron-rebuild
     
-    IGNORE="/(.*\.dmg$|Icon$|watch$|coffee$|bin/.*\.sh$|bin/.*\.noon$|bin/.*\.json$|icons$|.*md$|pug$|styl$|.*\.noon$|.*\.lock$|img/banner\.png|img/dmg|img/shot|img/.*\.pxm)"
+    IGNORE="/(.*\.dmg$|Icon$|watch$|bin/.*\.sh$|bin/.*\.json$|icons$|.*md$|pug$|styl$|.*\.lock$|img/banner\.png|img/dmg|img/shot|img/.*\.pxm)"
     
     node_modules/electron-packager/cli.js . --overwrite --icon=img/app.ico --ignore=$IGNORE
     

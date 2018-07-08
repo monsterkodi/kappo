@@ -6,7 +6,7 @@
 000   000  000   000  000  000   000
 ###
 
-{ post, srcmap, walkdir, about, args, childp, prefs, karg, slash, str, log, fs, _ } = require 'kxk'
+{ post, srcmap, walkdir, about, args, childp, prefs, karg, valid, slash, str, log, fs, _ } = require 'kxk'
 
 pkg           = require '../package.json'
 electron      = require 'electron'
@@ -287,13 +287,19 @@ app.on 'ready', ->
         hideWin = -> win?.hide()
         setTimeout hideWin, 2000
     
+    log 'scr'
     scr = require './scripts'
+    log 'scr', scr.winScripts?
     if slash.win()
         scripts = scr.winScripts()
+        log scripts
         exeFind = require './exefind'
         exeFind (exes) -> 
-            apps = exes
-            sortKeys()
+            if valid exes
+                apps = exes
+                sortKeys()
+            else
+                post.toWins 'mainlog', 'empty exes!' 
     else
         scripts = scr.macScripts()
         appFind = require './appfind'

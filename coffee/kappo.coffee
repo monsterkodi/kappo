@@ -28,6 +28,8 @@ search       = ''
 currentName  = ''
 currentIndex = 0
 
+post.on 'mainlog', (text) -> log ">>> " + text
+
 # 000   000  000  000   000  00     00   0000000   000  000   000
 # 000 0 000  000  0000  000  000   000  000   000  000  0000  000
 # 000000000  000  000 0 000  000000000  000000000  000  000 0 000
@@ -75,6 +77,8 @@ winMain = ->
 
     { apps, scripts, allKeys } = post.get 'apps'
 
+    log 'apps', apps
+    
     appHist = new history
         list:      prefs.get 'history', []
         maxLength: prefs.get 'maxHistoryLength', 10
@@ -463,5 +467,4 @@ document.onkeydown = (event) ->
         when 'command+right',           'ctrl+right'        then moveWindow  20, 0
         when 'command+0','command+o',   'ctrl+0','ctrl+o'   then toggleWindowSize()
 
-# win.on 'ready-to-show', -> 
 winMain()
