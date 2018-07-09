@@ -316,7 +316,11 @@ blacklist = ->
     ignore = prefs.get 'ignore', []
     
     _.pull ignore, apps[currentName]
-    ignore.push    apps[currentName]
+    _.pull ignore, null
+    if valid apps[currentName]
+        ignore.push apps[currentName]
+    else
+        log "can't ignore '#{currentName}'"
     
     prefs.set 'ignore', ignore
     

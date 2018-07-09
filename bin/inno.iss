@@ -1,5 +1,5 @@
 #define MyAppName "kappo"
-#define MyAppVersion "1.28.0"
+#define MyAppVersion "1.31.0"
 #define MyAppPublisher "monsterkodi"
 #define MyAppURL "https://github.com/monsterkodi/kappo"
 #define MyAppExeName "kappo.exe"
@@ -22,6 +22,7 @@ Compression=lzma
 SolidCompression=yes
 WizardImageFile=..\img\innolarge.bmp
 WizardSmallImageFile=..\img\innosmall.bmp
+WizardImageStretch=no
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"

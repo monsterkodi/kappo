@@ -31,7 +31,7 @@ class ExeIcon
                     
     @getIcon: (opt) ->
         
-        appPath = opt.appPath
+        appPath = slash.resolve opt.appPath
         pngPath = ExeIcon.pngPath opt
         
         log 'getIcon', appPath, pngPath
@@ -40,7 +40,7 @@ class ExeIcon
         
         if slash.isFile any2Ico
             
-            childp.exec "#{any2Ico} -formats=512 \"-res=#{appPath}\" \"-icon=#{pngPath}\"", opt, (err,stdout,stderr) -> 
+            childp.exec "\"#{any2Ico}\" -formats=512 -res=\"#{appPath}\" -icon=\"#{pngPath}\"", opt, (err,stdout,stderr) -> 
                 if not err 
                     log stdout
                     opt.cb pngPath, opt.cbArg
