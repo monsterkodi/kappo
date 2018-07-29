@@ -71,7 +71,7 @@ getActiveApp = ->
     else
         activeApp = childp.execSync "#{__dirname}/../bin/appswitch -P"
 
-    log 'getActiveApp', appName, activeApp
+    # log 'getActiveApp', appName, activeApp
         
     if win?
         if appName?
