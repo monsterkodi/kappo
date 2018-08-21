@@ -1,6 +1,6 @@
 name            kappo
 productName     kappo
-version         1.31.0
+version         1.33.0
 description     application opener
 main            js/main.js
 scripts
@@ -21,16 +21,16 @@ dependencies
                 ffi             ^2.2.0
                 fuzzaldrin      ^2.1.0
                 fuzzy           ^0.1.3
-                kxk             https://github.com/monsterkodi/kxk.git
-                opener          ^1.4.3
+                kxk             ../kxk
+                opener          ^1.5.0
                 ref             ^1.3.5
                 ref-array       ^1.2.0
                 ref-struct      ^1.1.0
                 ref-wchar       ^1.0.2
                 system-icon     ^0.1.2
                 win-icon-extractor  ^1.0.4
-                wxw             https://github.com/monsterkodi/wxw.git
+                wxw             ../wxw
 devDependencies
-                electron        ^2.0.2
-                electron-packager  ^12.1.0
-                electron-rebuild  ^1.7.3
+                electron        ^2.0.7
+                electron-packager  ^12.1.1
+                electron-rebuild  ^1.8.2
