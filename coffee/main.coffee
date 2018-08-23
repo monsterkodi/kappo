@@ -223,6 +223,9 @@ app.on 'ready', ->
     ,
         label: "About"
         click: showAbout
+    ,
+        label: "Activate"
+        click: toggleWindow
     ]
         
     app.dock?.hide()
