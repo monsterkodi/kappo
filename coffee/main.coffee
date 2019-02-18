@@ -6,7 +6,7 @@
 000   000  000   000  000  000   000
 ###
 
-{ post, srcmap, walkdir, about, args, childp, prefs, karg, valid, slash, str, log, fs, _ } = require 'kxk'
+{ post, srcmap, walkdir, about, args, childp, prefs, karg, valid, slash, str, log, os, fs, _ } = require 'kxk'
 
 pkg           = require '../package.json'
 electron      = require 'electron'
@@ -217,16 +217,17 @@ app.on 'ready', ->
     tray = new Tray "#{__dirname}/../img/menu.png"
     tray.on 'click', toggleWindow
     
-    tray.setContextMenu Menu.buildFromTemplate [
-        label: "Quit"
-        click: -> app.exit 0; process.exit 0
-    ,
-        label: "About"
-        click: showAbout
-    ,
-        label: "Activate"
-        click: toggleWindow
-    ]
+    if os.platform() != 'darwin'
+        tray.setContextMenu Menu.buildFromTemplate [
+            label: "Quit"
+            click: -> app.exit 0; process.exit 0
+        ,
+            label: "About"
+            click: showAbout
+        ,
+            label: "Activate"
+            click: toggleWindow
+        ]
         
     app.dock?.hide()
 
