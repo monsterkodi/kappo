@@ -47,6 +47,7 @@ args = args.init """
 post.on 'cancel', -> activateApp()
 post.on 'winlog', (text) -> log ">>> " + text
 post.on 'runScript', (name) -> scripts[name].cb()
+post.on 'about', -> showAbout()
 
 post.onGet 'apps', -> apps: apps, scripts:scripts, allKeys:allKeys
 
@@ -71,13 +72,16 @@ getActiveApp = ->
     else
         activeApp = childp.execSync "#{__dirname}/../bin/appswitch -P"
 
-    # log 'getActiveApp', appName, activeApp
+    log 'getActiveApp', appName, activeApp, win? if args.verbose
         
     if win?
         if appName?
+            log 'getActiveApp currentApp', appName if args.verbose
             post.toWins 'currentApp', appName
         else
+            log 'getActiveApp clearSearch', appName if args.verbose
             post.toWins 'clearSearch'
+        log 'getActiveApp fade' if args.verbose
         post.toWins 'fade'
     else
         createWindow()
@@ -105,8 +109,11 @@ activateApp = ->
 toggleWindow = ->
     
     if win?.isVisible()
-        post.toWins 'openCurrent'
-        activateApp() if not slash.win()
+        if prefs.get 'hideOnDoubleActivation', false
+            win.hide()
+        else
+            post.toWins 'openCurrent'
+            activateApp() if not slash.win()
     else
         if slash.win()
             if not win?
@@ -135,7 +142,6 @@ createWindow = ->
 
     return if win?
 
-    log 'createWindow'
     win = new BrowserWindow
         width:           300
         height:          300
@@ -153,6 +159,8 @@ createWindow = ->
         maxHeight:       600
         fullscreen:      false
         show:            false
+        webPreferences:
+            nodeIntegration: true
 
     bounds = prefs.get 'bounds'
     win.setBounds bounds if bounds?
@@ -163,6 +171,7 @@ createWindow = ->
     win.on 'ready-to-show', ->
         getActiveApp()
         if args.debug
+            win.show()
             win.webContents.openDevTools()
     win
 
@@ -210,10 +219,11 @@ app.on 'window-all-closed', (event) -> event.preventDefault()
 
 app.on 'ready', ->
 
-    if app.makeSingleInstance(->)
+    if not app.requestSingleInstanceLock()
+        log 'other instance running!'
         app.exit 0
         return
-
+    
     tray = new Tray "#{__dirname}/../img/menu.png"
     tray.on 'click', toggleWindow
     
@@ -289,12 +299,12 @@ app.on 'ready', ->
         allKeys.sort (a,b) -> a.toLowerCase().localeCompare b.toLowerCase()
         createWindow()
         hideWin = -> win?.hide()
-        setTimeout hideWin, 2000
+        if not args.debug
+            setTimeout hideWin, 2000
     
     scr = require './scripts'
     if slash.win()
         scripts = scr.winScripts()
-        log scripts
         exeFind = require './exefind'
         exeFind (exes) -> 
             if valid exes
@@ -309,4 +319,3 @@ app.on 'ready', ->
             apps = appl
             sortKeys()
     
-

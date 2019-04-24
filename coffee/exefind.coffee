@@ -55,7 +55,7 @@ exeFind = (cb) ->
 
             foldersLeft -= 1
             if foldersLeft == 0
-                post.toWins 'mainlog', "apps #{apps}"
+                # post.toWins 'mainlog', "apps #{apps}"
                 cb? apps
 
         walk.on 'file', (file) ->

@@ -7,7 +7,7 @@
 ###
 
 { post, args, srcmap, childIndex, setStyle, stopEvent, keyinfo, history, valid, empty, childp,
-  scheme, clamp, prefs, elem, fs, slash, log, error, pos, sw, $, _ } = require 'kxk'
+  scheme, clamp, prefs, elem, fs, slash, open, log, error, pos, sw, $, _ } = require 'kxk'
 
 pkg          = require '../package.json'
 fuzzy        = require 'fuzzy'
@@ -18,7 +18,8 @@ clipboard    = electron.clipboard
 browser      = electron.remote.BrowserWindow
 win          = electron.remote.getCurrentWindow()
 iconDir      = slash.resolve "#{electron.remote.app.getPath('userData')}/icons"
-
+ipc          = electron.ipcRenderer
+    
 appHist      = null
 results      = []
 apps         = {}
@@ -43,8 +44,6 @@ winMain = ->
         true
     
     log.slog.icon = slash.fileUrl slash.join __dirname, '..', 'img', 'menu@2x.png'
-    
-    log 'winMain'
     
     window.win = win
 
@@ -77,8 +76,6 @@ winMain = ->
 
     { apps, scripts, allKeys } = post.get 'apps'
 
-    log 'apps', apps
-    
     appHist = new history
         list:      prefs.get 'history', []
         maxLength: prefs.get 'maxHistoryLength', 10
@@ -98,6 +95,8 @@ winHide = ->
 
 openCurrent = ->
 
+    ipc.send 'closeAbout'
+    
     if currentIndex > 0 and search.length
         prefs.set "search:#{search}:#{currentName}", 1 + prefs.get "search:#{search}:#{currentName}", 0
 
@@ -151,7 +150,7 @@ currentApp = (appName) ->
     lastMatches   = currentName.toLowerCase() == appName.toLowerCase()
     scriptMatches = scripts[currentName]?.foreground? and slash.base(scripts[currentName].foreground).toLowerCase() == appName.toLowerCase()
         
-    if (lastMatches or scriptMatches) and appHist.previous()
+    if (lastMatches or scriptMatches) and appHist.previous() and prefs.get 'appToggle', true
         listHistory 1
         search = ''
     else
@@ -168,6 +167,20 @@ post.on 'currentApp', currentApp
 currentIsApp = => not currentIsScript()
 currentIsScript = -> results[currentIndex]?.script?
 
+# 000000000   0000000    0000000    0000000   000      00000000  
+#    000     000   000  000        000        000      000       
+#    000     000   000  000  0000  000  0000  000      0000000   
+#    000     000   000  000   000  000   000  000      000       
+#    000      0000000    0000000    0000000   0000000  00000000  
+
+toggleAppToggle = ->
+    
+    prefs.set 'appToggle', not prefs.get 'appToggle', true
+    
+toggleDoubleActivation = ->
+
+    prefs.set 'hideOnDoubleActivation', not prefs.get 'hideOnDoubleActivation', false
+    
 # 000   000  000   0000000  000000000   0000000   00000000   000   000
 # 000   000  000  000          000     000   000  000   000   000 000
 # 000000000  000  0000000      000     000   000  0000000      00000
@@ -371,6 +384,8 @@ backspace =       -> doSearch search.substr 0, search.length-1
 
 cancelSearchOrClose = ->
     
+    ipc.send 'closeAbout'
+    
     if search.length
         doSearch ''
     else
@@ -466,6 +481,10 @@ document.onkeydown = (event) ->
         when 'command+r',               'ctrl+r'            then findApps()
         when 'command+h',               'alt+h'             then listHistory()
         when 'command+f',               'ctrl+f'            then openInFinder()
+        when 'command+t',               'ctrl+t'            then toggleAppToggle()
+        when 'command+d',               'ctrl+d'            then toggleDoubleActivation()
+        when 'command+.',               'ctrl+.'            then post.toMain 'about'
+        when 'command+,',               'ctrl+,'            then open prefs.store.file
         when 'command+up',              'ctrl+up'           then moveWindow 0,-20
         when 'command+down',            'ctrl+down'         then moveWindow 0, 20
         when 'command+left',            'ctrl+left'         then moveWindow -20, 0

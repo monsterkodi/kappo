@@ -34,7 +34,7 @@ class ExeIcon
         appPath = slash.resolve opt.appPath
         pngPath = ExeIcon.pngPath opt
         
-        log 'getIcon', appPath, pngPath
+        # log 'getIcon', appPath, pngPath
         
         any2Ico = slash.path __dirname + '/../bin/Quick_Any2Ico.exe'
         
@@ -42,7 +42,7 @@ class ExeIcon
             
             childp.exec "\"#{any2Ico}\" -formats=512 -res=\"#{appPath}\" -icon=\"#{pngPath}\"", opt, (err,stdout,stderr) -> 
                 if not err 
-                    log stdout
+                    # log stdout
                     opt.cb pngPath, opt.cbArg
                 else
                     if slash.ext(appPath)!= 'lnk'
