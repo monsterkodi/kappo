@@ -44,13 +44,47 @@ args = args.init """
 # 000        000   000       000     000   
 # 000         0000000   0000000      000   
 
-post.on 'cancel', -> activateApp()
-post.on 'winlog', (text) -> log ">>> " + text
+post.on 'winlog',    (text) -> log ">>> " + text
 post.on 'runScript', (name) -> scripts[name].cb()
-post.on 'about', -> showAbout()
+post.on 'cancel',   -> activateApp()
+post.on 'about',    -> showAbout()
+post.on 'findApps', -> findApps()
 
 post.onGet 'apps', -> apps: apps, scripts:scripts, allKeys:allKeys
 
+# 00000000  000  000   000  0000000           0000000   00000000   00000000    0000000  
+# 000       000  0000  000  000   000        000   000  000   000  000   000  000       
+# 000000    000  000 0 000  000   000        000000000  00000000   00000000   0000000   
+# 000       000  000  0000  000   000        000   000  000        000             000  
+# 000       000  000   000  0000000          000   000  000        000        0000000   
+
+findApps = ->
+
+    sortKeys = ->
+
+        allKeys = Object.keys(apps).concat Object.keys(scripts)
+        allKeys.sort (a,b) -> a.toLowerCase().localeCompare b.toLowerCase()
+        
+        if win
+            post.toWins 'appsFound'
+        else
+            createWindow()
+            hideWin = -> win?.hide()
+            if not args.debug
+                setTimeout hideWin, 1000
+    
+    if slash.win()
+        exeFind = require './exefind'
+        exeFind (exes) -> 
+            if valid exes
+                apps = exes
+                sortKeys()
+    else
+        appFind = require './appfind'
+        appFind (appl) -> 
+            apps = appl
+            sortKeys()
+            
 # 0000000    0000000  000000000  000  000   000  00000000
 #000   000  000          000     000  000   000  000
 #000000000  000          000     000   000 000   0000000
@@ -137,6 +171,12 @@ toggleWindow = ->
                         win.focus()
 
 reloadWindow = -> win.webContents.reloadIgnoringCache()
+
+#  0000000  00000000   00000000   0000000   000000000  00000000  
+# 000       000   000  000       000   000     000     000       
+# 000       0000000    0000000   000000000     000     0000000   
+# 000       000   000  000       000   000     000     000       
+#  0000000  000   000  00000000  000   000     000     00000000  
 
 createWindow = ->
 
@@ -294,28 +334,11 @@ app.on 'ready', ->
 
     fs.ensureDirSync iconDir
 
-    sortKeys = ->
-        allKeys = Object.keys(apps).concat Object.keys(scripts)
-        allKeys.sort (a,b) -> a.toLowerCase().localeCompare b.toLowerCase()
-        createWindow()
-        hideWin = -> win?.hide()
-        if not args.debug
-            setTimeout hideWin, 2000
-    
     scr = require './scripts'
     if slash.win()
         scripts = scr.winScripts()
-        exeFind = require './exefind'
-        exeFind (exes) -> 
-            if valid exes
-                apps = exes
-                sortKeys()
-            else
-                post.toWins 'mainlog', 'empty exes!' 
     else
         scripts = scr.macScripts()
-        appFind = require './appfind'
-        appFind (appl) -> 
-            apps = appl
-            sortKeys()
     
+    findApps()
+            

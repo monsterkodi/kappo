@@ -30,6 +30,7 @@ currentName  = ''
 currentIndex = 0
 
 post.on 'mainlog', (text) -> log ">>> " + text
+post.on 'appsFound', -> { apps, scripts, allKeys } = post.get 'apps'
 
 # 000   000  000  000   000  00     00   0000000   000  000   000
 # 000 0 000  000  0000  000  000   000  000   000  000  0000  000
@@ -478,7 +479,7 @@ document.onkeydown = (event) ->
         when 'command+alt+i',           'ctrl+alt+i'        then args.debug = true; win.webContents.openDevTools()
         when 'command+=',               'ctrl+='            then biggerWindow()
         when 'command+-',               'ctrl+-'            then smallerWindow()
-        when 'command+r',               'ctrl+r'            then findApps()
+        when 'command+r',               'ctrl+r'            then post.toMain 'findApps'
         when 'command+h',               'alt+h'             then listHistory()
         when 'command+f',               'ctrl+f'            then openInFinder()
         when 'command+t',               'ctrl+t'            then toggleAppToggle()
