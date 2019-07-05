@@ -7,7 +7,7 @@
 ###
 
 { post, args, srcmap, childIndex, setStyle, stopEvent, keyinfo, history, valid, empty, childp,
-  scheme, clamp, prefs, elem, fs, slash, open, log, error, pos, sw, $, _ } = require 'kxk'
+  scheme, clamp, prefs, elem, fs, slash, open, klog, kerror, kpos, sw, $, _ } = require 'kxk'
 
 pkg          = require '../package.json'
 fuzzy        = require 'fuzzy'
@@ -44,7 +44,7 @@ winMain = ->
         srcmap.logErr err
         true
     
-    log.slog.icon = slash.fileUrl slash.join __dirname, '..', 'img', 'menu@2x.png'
+    klog.slog.icon = slash.fileUrl slash.join __dirname, '..', 'img', 'menu@2x.png'
     
     window.win = win
 

@@ -6,7 +6,7 @@
 000   000  000   000  000  000   000
 ###
 
-{ post, srcmap, walkdir, about, args, childp, prefs, karg, valid, slash, str, log, os, fs, _ } = require 'kxk'
+{ post, srcmap, walkdir, about, args, childp, prefs, karg, valid, slash, kstr, klog, os, fs, _ } = require 'kxk'
 
 pkg           = require '../package.json'
 electron      = require 'electron'
@@ -29,7 +29,7 @@ process.on 'uncaughtException', (err) ->
     srcmap.logErr err, '🔻'
     true
 
-log.slog.icon = slash.fileUrl slash.resolve slash.join __dirname, '..', 'img', 'menu@2x.png'
+klog.slog.icon = slash.fileUrl slash.resolve slash.join __dirname, '..', 'img', 'menu@2x.png'
 
 app.setName pkg.productName
 
