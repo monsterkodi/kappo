@@ -1,16 +1,21 @@
 #!/usr/bin/env bash
-cd `dirname $0`/..
 
-NAME=kappo
+DIR=`dirname $0`
+BIN=$DIR/../node_modules/.bin
+cd $DIR/..
 
-2>/dev/null 1>/dev/null killall $NAME
-2>/dev/null 1>/dev/null killall $NAME
+if rm -rf kappo-darwin-x64; then
 
-konrad 
-
-IGNORE="/(.*\.dmg$|Icon$|watch$|coffee$|bin/.*\.sh$|bin/.*\.noon$|bin/.*\.json$|icons$|.*md$|pug$|styl$|.*\.noon$|.*\.lock$|img/banner\.png|img/dmg|img/shot|img/.*\.pxm)"
-
-node_modules/electron-packager/cli.js . --overwrite --icon=img/$NAME.icns --darwinDarkModeSupport --ignore=$IGNORE
-
-rm -f $NAME-darwin-x64/LICENSE*
-rm -f $NAME-darwin-x64/version
+    if $BIN/konrad; then
+    
+        IGNORE="/(.*\.dmg$|Icon$|watch$|coffee$|bin/.*\.sh$|bin/.*\.noon$|bin/.*\.json$|icons$|.*md$|pug$|styl$|.*\.noon$|.*\.lock$|img/banner\.png|img/dmg|img/shot|img/.*\.pxm)"
+        
+        if $BIN/electron-packager . --overwrite --icon=img/app.icns --darwinDarkModeSupport --ignore=$IGNORE; then
+        
+            rm -rf /Applications/kappo.app
+            cp -R kappo-darwin-x64/kappo.app /Applications
+            
+            open /Applications/kappo.app 
+        fi
+    fi
+fi

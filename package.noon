@@ -8,7 +8,7 @@ scripts
                 win   bash ./bin/buildwin.sh
 repository
                 type  git
-                url   git+https://github.com/monsterkodi/kappo.git
+                url   https://github.com/monsterkodi/kappo.git
 keywords
                 application
                 opener
@@ -20,8 +20,8 @@ bugs
 dependencies
                 fuzzaldrin    ^2.1.0
                 fuzzy         ^0.1.3
+                kxk           ^0.325.0
                 osascript     ^1.2.0
-                kxk           ../kxk
                 simple-plist  ^1.0.0
                 system-icon   ^0.1.3
 optionalDependencies
@@ -32,6 +32,7 @@ optionalDependencies
                 ffi             ^2.3.0
                 win-icon-extractor  ^1.0.4
 devDependencies
-                electron        ^4.1.4
-                electron-packager  ^13.1.1
-                electron-rebuild  ^1.8.4
+                electron        ^5.0.6
+                electron-packager  ^14.0.1
+                electron-rebuild  ^1.8.5
+                konrad          ^0.133.0
