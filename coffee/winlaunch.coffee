@@ -5,13 +5,18 @@
 # 000   000  000  000  0000  000      000   000  000   000  000  0000  000       000   000
 # 00     00  000  000   000  0000000  000   000   0000000   000   000   0000000  000   000
 
-{ slash, childp, empty } = require 'kxk'
+{ slash, childp, empty, klog } = require 'kxk'
 
-{ raise } = require 'wxw'
+wxw = require 'wxw'
 
 winLaunch = (exePath) ->
     
-    return true if raise exePath
+    exe = slash.file exePath
+    info = wxw('info' exe)?[0]
+    if info?
+        # wxw 'raise' exe
+        wxw 'focus' exe
+        return true 
                 
     if "cmd" == slash.base exePath
         childp.exec "start cmd /k"

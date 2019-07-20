@@ -10,9 +10,9 @@
 
 winRecycle  = ->
     
-    { trash } = require 'wxw'
+    wxw = require 'wxw'
     
-    trash 'empty'
+    wxw 'trash' 'empty'
     
 winScripts = () ->
     

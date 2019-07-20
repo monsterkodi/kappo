@@ -119,12 +119,17 @@ openCurrent = ->
         
         if scripts[currentName].foreground?
             
+            exe = slash.file scripts[currentName].foreground
+            
             addToHistory()
             
             if slash.win()
-                { foreground } = require 'wxw'
-                if not empty foreground scripts[currentName].foreground
+                wxw = require 'wxw'
+                info = wxw('info' exe)?[0]
+                if info
                     winHide()
+                    wxw 'raise' exe
+                    wxw 'focus' exe
                     return
         
         if scripts[currentName].exec?
@@ -418,7 +423,7 @@ window.onwheel  = (event) ->
 #      000  000   000     000
 # 0000000   000  0000000  00000000
 
-screenSize = -> electron.screen.getPrimaryDisplay().workAreaSize
+screenSize = -> electron.remote.screen.getPrimaryDisplay().workAreaSize
 
 clampBounds = (b) ->
     b.width = clamp 200, 600, b.width

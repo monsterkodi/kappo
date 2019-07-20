@@ -99,7 +99,7 @@ getActiveApp = ->
 
     if slash.win()
         wxw = require 'wxw'
-        top = wxw.info 'top' 
+        top = wxw('info' 'top')[0]
         if top?.path?
             appName = activeApp = slash.base top.path
     else
@@ -124,7 +124,10 @@ activateApp = ->
     if slash.win()
         if activeWin
             wxw = require 'wxw'
-            wxw.foreground wxw.wininfo(activeWin).path
+            info = wxw('info' activeWin)[0]
+            if info?.path
+                wxw 'raise' info.path
+                wxw 'focus' info.path
         win?.hide()
     else
 
