@@ -48,29 +48,9 @@ class ExeIcon
                     if slash.ext(appPath)!= 'lnk'
                         error stdout, stderr, err
                     ExeIcon.brokenIcon opt
-            
+
         else
-            { getIconForPath, ICON_SIZE_LARGE, ICON_SIZE_MEDIUM, ICON_SIZE_EXTRA_LARGE } = require 'system-icon'
-                 
-            getIconForPath appPath, ICON_SIZE_EXTRA_LARGE, (err, data) ->
-                if not err?
-                    ExeIcon.saveIconData data, opt
-                else
-                    getIconForPath appPath, ICON_SIZE_LARGE, (err, data) ->
-                        if not err?
-                            ExeIcon.saveIconData data, opt
-                        else
-                            getIconForPath appPath, ICON_SIZE_MEDIUM, (err, data) ->
-                                if not err?
-                                    ExeIcon.saveIconData data, opt
-                                else 
-                                    extractIcon = require 'win-icon-extractor'
-                                    extractIcon(appPath).then (result) ->
-                                        if result
-                                            data = result.slice 'data:image/png;base64,'.length
-                                            ExeIcon.saveIconBase64 data, opt
-                                        else
-                                            ExeIcon.brokenIcon opt
+            error 'cant create icon'
                 
     @saveIconData: (data, opt) ->
         

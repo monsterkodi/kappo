@@ -5,26 +5,22 @@
 # 000   000  000  000  0000  000      000   000  000   000  000  0000  000       000   000
 # 00     00  000  000   000  0000000  000   000   0000000   000   000   0000000  000   000
 
-{ slash, childp, empty, error, log } = require 'kxk'
+{ slash, childp, empty } = require 'kxk'
 
-{ foreground } = require 'wxw'
+{ raise } = require 'wxw'
 
 winLaunch = (exePath) ->
     
-    focusWins = foreground exePath
-        
-    if not empty focusWins
-        
-        return focusWins:focusWins
-        
+    return true if raise exePath
+                
     if "cmd" == slash.base exePath
         childp.exec "start cmd /k"
-        return
+        return true
         
-    subprocess = childp.spawn "\"#{exePath}\"", [], detached: true, stdio: 'ignore', shell: true
+    subprocess = childp.spawn "\"#{exePath}\"", [], detached:true, stdio:'ignore', shell:true
     subprocess.on 'error', (err) ->
         error "winLaunch -- failed to start subprocess #{exePath} #{args.join ' '}."
         
-    return subprocess:subprocess
+    true
 
 module.exports = winLaunch

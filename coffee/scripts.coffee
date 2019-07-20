@@ -10,14 +10,9 @@
 
 winRecycle  = ->
     
-    { user, shell } = require 'wxw'
+    { trash } = require 'wxw'
     
-    if prefs.get 'confirmRecycle', false
-        confirm = 0
-    else
-        confirm = 1
-        
-    shell.SHEmptyRecycleBinW user.GetForegroundWindow(), null, confirm
+    trash 'empty'
     
 winScripts = () ->
     

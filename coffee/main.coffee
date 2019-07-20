@@ -99,10 +99,9 @@ getActiveApp = ->
 
     if slash.win()
         wxw = require 'wxw'
-        activeWin = wxw.active()
-        wxwInfo = wxw.wininfo activeWin
-        if wxwInfo?.path?
-            appName = activeApp = slash.base wxwInfo.path
+        top = wxw.info 'top' 
+        if top?.path?
+            appName = activeApp = slash.base top.path
     else
         activeApp = childp.execSync "#{__dirname}/../bin/appswitch -P"
 

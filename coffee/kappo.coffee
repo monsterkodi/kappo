@@ -107,8 +107,8 @@ openCurrent = ->
         
         if slash.win()
 
-            launch = require './winlaunch'
-            if launch apps[currentName]
+            winlaunch = require './winlaunch'
+            if winlaunch apps[currentName]
                 winHide()
 
         else
