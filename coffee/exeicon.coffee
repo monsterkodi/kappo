@@ -6,7 +6,7 @@
 0000000  000   000  00000000  000   0000000   0000000   000   000  
 ###
 
-{ slash, empty, fs, childp, error, log } = require 'kxk'
+{ slash, empty, fs, childp, kerror, klog } = require 'kxk'
     
 class ExeIcon
     
@@ -34,11 +34,11 @@ class ExeIcon
         appPath = slash.resolve opt.appPath
         pngPath = ExeIcon.pngPath opt
         
-        # log 'getIcon', appPath, pngPath
+        klog 'getIcon', appPath, pngPath
         
         any2Ico = slash.path __dirname + '/../bin/Quick_Any2Ico.exe'
         
-        if slash.isFile any2Ico
+        if false #slash.isFile any2Ico
             
             childp.exec "\"#{any2Ico}\" -formats=512 -res=\"#{appPath}\" -icon=\"#{pngPath}\"", opt, (err,stdout,stderr) -> 
                 if not err 
@@ -46,11 +46,13 @@ class ExeIcon
                     opt.cb pngPath, opt.cbArg
                 else
                     if slash.ext(appPath)!= 'lnk'
-                        error stdout, stderr, err
+                        kerror stdout, stderr, err
                     ExeIcon.brokenIcon opt
 
         else
-            error 'cant create icon'
+            wxw = require 'wxw'
+            wxw 'icon' appPath, pngPath
+            opt.cb pngPath, opt.cbArg
                 
     @saveIconData: (data, opt) ->
         
@@ -59,7 +61,7 @@ class ExeIcon
             if not err?
                 opt.cb pngPath, opt.cbArg
             else
-                error "saveIconData: #{err}"
+                kerror "saveIconData: #{err}"
                 ExeIcon.brokenIcon opt
 
     @saveIconBase64: (data, opt) ->
@@ -69,7 +71,7 @@ class ExeIcon
             if not err?
                 opt.cb pngPath, opt.cbArg
             else
-                error "saveIconBase64: #{err}"
+                kerror "saveIconBase64: #{err}"
                 ExeIcon.brokenIcon opt
                 
     @brokenIcon: (opt) ->

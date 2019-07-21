@@ -1,15 +1,18 @@
 #!/usr/bin/env bash
-cd `dirname $0`/..
+DIR=`dirname $0`
+BIN=$DIR/../node_modules/.bin
+cd $DIR/..
+
+npm install
 
 if rm -rf kappo-win32-x64; then
 
-    konrad
-    
-    node_modules/.bin/electron-rebuild
-    
-    IGNORE="/(.*\.dmg$|Icon$|watch$|bin/.*\.sh$|bin/.*\.json$|icons$|.*md$|pug$|styl$|.*\.lock$|img/banner\.png|img/dmg|img/shot|img/.*\.pxm)"
-    
-    node_modules/electron-packager/cli.js . --overwrite --icon=img/app.ico --ignore=$IGNORE
-    
-    rm -rf kappo-win32-x64/resources/app/inno
-fi
+    if $BIN/konrad; then
+
+        $BIN/electron-rebuild
+
+        $BIN/electron-packager . --overwrite --icon=img/app.ico
+
+        start kappo-win32-x64/kappo.exe
+    fi
+fi

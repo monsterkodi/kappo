@@ -107,9 +107,9 @@ openCurrent = ->
         
         if slash.win()
 
-            winlaunch = require './winlaunch'
-            if winlaunch apps[currentName]
-                winHide()
+            wxw = require 'wxw'
+            wxw 'launch' apps[currentName]
+            winHide()
 
         else
             childp.exec "open -a \"#{apps[currentName]}\"", (err) ->
@@ -120,7 +120,7 @@ openCurrent = ->
         if scripts[currentName].foreground?
             
             exe = slash.file scripts[currentName].foreground
-            
+            klog 'exe'
             addToHistory()
             
             if slash.win()
@@ -128,6 +128,7 @@ openCurrent = ->
                 info = wxw('info' exe)?[0]
                 if info
                     winHide()
+                    wxw 'show'  exe
                     wxw 'raise' exe
                     wxw 'focus' exe
                     return

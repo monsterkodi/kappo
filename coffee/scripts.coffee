@@ -11,7 +11,6 @@
 winRecycle  = ->
     
     wxw = require 'wxw'
-    
     wxw 'trash' 'empty'
     
 winScripts = () ->
@@ -57,3 +56,4 @@ macScripts = () ->
 module.exports = 
     macScripts: macScripts
     winScripts: winScripts
+    
