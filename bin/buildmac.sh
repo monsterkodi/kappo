@@ -8,7 +8,7 @@ if rm -rf kappo-darwin-x64; then
 
     if $BIN/konrad; then
     
-        IGNORE="/(.*\.dmg$|Icon$|watch$|coffee$|bin/.*\.sh$|bin/.*\.noon$|bin/.*\.json$|icons$|.*md$|pug$|styl$|.*\.noon$|.*\.lock$|img/banner\.png|img/dmg|img/shot|img/.*\.pxm)"
+        IGNORE="(.*\.dmg$|Icon$|.*\.lock$|img/banner\.png|img/dmg|img/shot|img/.*\.pxm)"
         
         if $BIN/electron-packager . --overwrite --icon=img/app.icns --darwinDarkModeSupport --ignore=$IGNORE; then
         

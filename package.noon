@@ -6,6 +6,11 @@ author          monsterkodi
 license         Unlicense
 main            js/main.js
 repository      github:monsterkodi/kappo
+files
+                bin/*
+                js/*
+                scripts/*
+                img/*
 bugs
                 url  https://github.com/monsterkodi/kappo/issues
 scripts

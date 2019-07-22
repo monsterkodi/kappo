@@ -11,7 +11,8 @@ if rm -rf kappo-win32-x64; then
 
         $BIN/electron-rebuild
 
-        $BIN/electron-packager . --overwrite --icon=img/app.ico
+        IGNORE="(inno|.*\.dmg$|Icon$|.*\.lock$|img\/dmg.*\.png)"
+        $BIN/electron-packager . --overwrite --ignore=$IGNORE --icon=img/app.ico
 
         start kappo-win32-x64/kappo.exe
     fi
