@@ -107,6 +107,7 @@ openCurrent = ->
         
         if slash.win()
 
+            klog 'launch' currentName, apps[currentName]
             wxw = require 'wxw'
             wxw 'launch' apps[currentName]
             winHide()
