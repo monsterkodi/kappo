@@ -119,6 +119,12 @@ getActiveApp = ->
     else
         createWindow()
 
+#  0000000    0000000  000000000  000  000   000   0000000   000000000  00000000  
+# 000   000  000          000     000  000   000  000   000     000     000       
+# 000000000  000          000     000   000 000   000000000     000     0000000   
+# 000   000  000          000     000     000     000   000     000     000       
+# 000   000   0000000     000     000      0      000   000     000     00000000  
+
 activateApp = ->
 
     if slash.win()
@@ -126,8 +132,10 @@ activateApp = ->
             wxw = require 'wxw'
             info = wxw('info' activeWin)[0]
             if info?.path
-                wxw 'raise' info.path
-                wxw 'focus' info.path
+                klog 'activate' info.path
+                wxw 'launch' info.path
+                # wxw 'raise' info.path
+                # wxw 'focus' info.path
         win?.hide()
     else
 
