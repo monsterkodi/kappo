@@ -48,7 +48,7 @@ winMain = ->
     
     window.win = win
 
-    post.on 'fade', ->
+    post.on 'fade' ->
         
         if not slash.win()
             win.show()
