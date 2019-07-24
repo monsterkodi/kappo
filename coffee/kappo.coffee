@@ -490,7 +490,7 @@ document.onkeydown = (event) ->
         when 'command+f',               'ctrl+f'            then openInFinder()
         when 'command+t',               'ctrl+t'            then toggleAppToggle()
         when 'command+d',               'ctrl+d'            then toggleDoubleActivation()
-        when 'command+.',               'ctrl+.'            then post.toMain 'about'
+        when 'alt+command+/',           'alt+ctrl+/'        then post.toMain 'about'
         when 'command+,',               'ctrl+,'            then open prefs.store.file
         when 'command+up',              'ctrl+up'           then moveWindow 0,-20
         when 'command+down',            'ctrl+down'         then moveWindow 0, 20
