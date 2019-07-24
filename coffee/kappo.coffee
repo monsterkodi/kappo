@@ -107,7 +107,7 @@ openCurrent = ->
         
         if slash.win()
 
-            klog 'launch' currentName, apps[currentName]
+            # klog 'launch' currentName, apps[currentName]
             wxw = require 'wxw'
             wxw 'launch' apps[currentName]
             winHide()
@@ -121,7 +121,6 @@ openCurrent = ->
         if scripts[currentName].foreground?
             
             exe = slash.file scripts[currentName].foreground
-            klog 'exe'
             addToHistory()
             
             if slash.win()
