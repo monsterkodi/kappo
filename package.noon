@@ -28,4 +28,4 @@ devDependencies
                 electron        ^5.0.8
                 electron-packager  ^14.0.3
                 electron-rebuild  ^1.8.5
-                konrad          ^0.141.0
+                konrad          ^0.148.0
