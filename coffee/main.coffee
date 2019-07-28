@@ -267,12 +267,14 @@ app.on 'window-all-closed', (event) -> event.preventDefault()
 #000   000  000       000   000  000   000     000
 #000   000  00000000  000   000  0000000       000
 
-app.on 'ready', ->
+app.on 'ready' ->
 
-    if not app.requestSingleInstanceLock()
-        log 'other instance running!'
-        app.exit 0
-        return
+    if app.requestSingleInstanceLock?
+        
+        if app.requestSingleInstanceLock()
+            app.on 'second-instance' toggleWindow
+        else
+            app.exit 0
     
     tray = new Tray "#{__dirname}/../img/menu.png"
     tray.on 'click', toggleWindow
@@ -351,4 +353,5 @@ app.on 'ready', ->
         scripts = scr.macScripts()
     
     findApps()
+        
             
