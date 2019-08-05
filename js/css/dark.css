@@ -1,0 +1,15 @@
+#main {
+  background: #181818;
+}
+#appname {
+  color: #ccc;
+}
+#appname b {
+  color: #fff;
+}
+.appdot {
+  background: #444;
+}
+.appdot.current {
+  background: #888;
+}

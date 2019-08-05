@@ -26,6 +26,7 @@ exeFind = (cb) ->
     dirs.push "C:/Program Files"
     dirs.push "C:/Program Files (x86)"
     dirs.push slash.resolve '~/AppData/Local'
+    dirs.push slash.resolve '~/'
 
     ignoreDefaults = require '../bin/ignore'
 
@@ -44,7 +45,7 @@ exeFind = (cb) ->
 
     for exeFolder in dirs
         
-        walkOpt = prefs.get 'walk', no_recurse: false, max_depth: 3
+        walkOpt = prefs.get 'walk', no_recurse: false, max_depth: 4
         walk = walkdir slash.resolve(exeFolder), walkOpt
 
         walk.on 'error', (err) -> 
