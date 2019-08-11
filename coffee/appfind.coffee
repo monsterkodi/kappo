@@ -15,12 +15,13 @@ appFind = (cb) ->
     appFolders = [
         "/Applications"
         "/Applications/Utilities"
+        "~"
         ]
     appFolders = appFolders.concat prefs.get 'dirs', []
     foldersLeft = appFolders.length
     
     for appFolder in appFolders
-        walkOpt = prefs.get 'walk', no_recurse: true
+        walkOpt = prefs.get 'walk', no_recurse: false, max_depth: 4
         walk = walkdir slash.resolve(appFolder), walkOpt
         walk.on 'error', (err) -> log "[ERROR] findApps -- #{err}"
         walk.on 'end', ->
