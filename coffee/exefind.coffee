@@ -6,7 +6,7 @@
 00000000  000   000  00000000        000       000  000   000  0000000
 ###
 
-{ post, slash, walkdir, prefs, log, _ } = require 'kxk'
+{ post, slash, walkdir, prefs, klog, _ } = require 'kxk'
 
 exeFind = (cb) ->
 
@@ -30,7 +30,7 @@ exeFind = (cb) ->
 
     ignoreDefaults = require '../bin/ignore'
 
-    ignoredByDefault = (file) ->
+    ignoredByName = (file) ->
         file = file.toLowerCase()
         for start in ignoreDefaults.startsWith
             return true if file.startsWith start
@@ -38,6 +38,11 @@ exeFind = (cb) ->
             return true if file.indexOf(contains) >= 0
         for match in ignoreDefaults.matches
             return true if file == match
+        false
+        
+    ignoredByPath = (file) ->
+        for path in ignoreDefaults.path
+            return true if file.indexOf(path) >= 0
         false
             
     ignore = prefs.get 'ignore', []
@@ -56,7 +61,8 @@ exeFind = (cb) ->
 
             foldersLeft -= 1
             if foldersLeft == 0
-                # post.toWins 'mainlog', "apps #{apps}"
+                # post.toWins 'mainlog' "apps #{apps}"
+                klog 'apps' apps
                 cb? apps
 
         walk.on 'file', (file) ->
@@ -64,7 +70,7 @@ exeFind = (cb) ->
             file = slash.resolve file
             if slash.ext(file) == 'exe'
                 name = slash.base file
-                if file not in ignore and not ignoredByDefault name
+                if file not in ignore and not ignoredByName(name) and not ignoredByPath(file)
                     if not apps[name]?
                         apps[name] = file
 

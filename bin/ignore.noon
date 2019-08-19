@@ -1,16 +1,54 @@
+path
+    /IDE/
+    Tools/
+    /usr/libexec/
+    /bin/
+    /Bin/
+    /HDA/
+    /rempl/
+    shared/ink/
 contains
     setup
-    instal
+    inst
     update
+    plugin
+    service
+    configuration
+    cache
+    crash
+    authentication
 startsWith
+    qt
+    python
+    compil
+    microsoft.
+    minidump
+    mercurial
+    myprog
+    geforce
+    3dvision
+    conemu-
+    clink
+    sign
+    ait
+    dotfus
+    tamper
+    appcert
+    stree
+    teamviewer_
     unins
+    unpack
+    islz
     ii
     ie
+    jhi
     nv
     tv_
     gs
     hlp
     gld
+    git-
+    bss
     dp
     wm
     x86
@@ -21,12 +59,26 @@ startsWith
     sm
     wab
     sense
+    sql
     vulkan
     beservice
+    ocenvst
+    ocenaudio_c
+    steamerr
     config
+    vbox
+    w9x
+    vc
+    vs
+    tf
+    rm
+    rtl
+    rtk
 matches
     7z
     7zg
+    git
+    hg
     agcp
     amd64
     analyzer
@@ -34,6 +86,11 @@ matches
     askpass
     browsercore
     builder
+    buildtools_full
+    chrome_proxy
+    cleanup
+    crashreporter
+    dotnet
     bzip2
     consoleexecutor
     container
@@ -41,19 +98,30 @@ matches
     exclusivemodetool
     extexport
     gameoverlayui
+    openssl
+    link
     gen
-    git
     gui
+    getopt
     helper
+    wininfo
+    inkview
+    streaming_client
     hhc
+    iscc
     imagingdevices
     instool
     intelpttekrecertification
     maintenanceservice
+    makeappx
+    lms
+    tsc
     nissrv
     offlinescannershell
+    patch
     pdnrepair
     pingsender
+    slideshow
     rg
     shellintegration
     sllauncher
@@ -64,5 +132,8 @@ matches
     un_a
     vswhere
     wdnsfltr
+    add_path
     writeminidump
+    wslbridge
+    wsenable
     xinputtest

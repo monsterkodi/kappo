@@ -25,11 +25,11 @@ apps          = {}
 scripts       = {}
 allKeys       = []
 
-process.on 'uncaughtException', (err) ->
+process.on 'uncaughtException' (err) ->
     srcmap.logErr err, '🔻'
     true
 
-klog.slog.icon = slash.fileUrl slash.resolve slash.join __dirname, '..', 'img', 'menu@2x.png'
+klog.slog.icon = slash.fileUrl slash.resolve slash.join __dirname, '..' 'img' 'menu@2x.png'
 
 app.setName pkg.productName
 
@@ -44,13 +44,13 @@ args = args.init """
 # 000        000   000       000     000   
 # 000         0000000   0000000      000   
 
-post.on 'winlog',    (text) -> log ">>> " + text
-post.on 'runScript', (name) -> scripts[name].cb()
-post.on 'cancel',   -> activateApp()
-post.on 'about',    -> showAbout()
-post.on 'findApps', -> findApps()
+post.on 'winlog'    (text) -> log ">>> " + text
+post.on 'runScript' (name) -> scripts[name].cb()
+post.on 'cancel'   -> activateApp()
+post.on 'about'    -> showAbout()
+post.on 'findApps' -> findApps()
 
-post.onGet 'apps', -> apps: apps, scripts:scripts, allKeys:allKeys
+post.onGet 'apps' -> apps: apps, scripts:scripts, allKeys:allKeys
 
 # 00000000  000  000   000  0000000           0000000   00000000   00000000    0000000  
 # 000       000  0000  000  000   000        000   000  000   000  000   000  000       
@@ -109,10 +109,10 @@ getActiveApp = ->
         
     if win?
         if appName?
-            log 'getActiveApp currentApp', appName if args.verbose
-            post.toWins 'currentApp', appName
+            log 'getActiveApp currentApp' appName if args.verbose
+            post.toWins 'currentApp' appName
         else
-            log 'getActiveApp clearSearch', appName if args.verbose
+            log 'getActiveApp clearSearch' appName if args.verbose
             post.toWins 'clearSearch'
         log 'getActiveApp fade' if args.verbose
         post.toWins 'fade'
@@ -215,10 +215,10 @@ createWindow = ->
     bounds = prefs.get 'bounds'
     win.setBounds bounds if bounds?
     win.loadURL "file://#{__dirname}/index.html"
-    win.on 'closed', -> win = null
-    win.on 'resize', onWinResize
-    win.on 'move',   saveBounds
-    win.on 'ready-to-show', ->
+    win.on 'closed' -> win = null
+    win.on 'resize' onWinResize
+    win.on 'move'   saveBounds
+    win.on 'ready-to-show' ->
         getActiveApp()
         if args.debug
             win.show()
@@ -259,7 +259,7 @@ showAbout = ->
         size:       200
         pkg:        pkg
 
-app.on 'window-all-closed', (event) -> event.preventDefault()
+app.on 'window-all-closed' (event) -> event.preventDefault()
 
 #00000000   00000000   0000000   0000000    000   000
 #000   000  000       000   000  000   000   000 000
@@ -340,7 +340,7 @@ app.on 'ready' ->
         ]
     ]
 
-    prefs.init shortcut: 'F1'
+    prefs.init defaults:shortcut:'F1'
 
     electron.globalShortcut.register prefs.get('shortcut'), toggleWindow
 

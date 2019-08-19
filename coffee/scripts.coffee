@@ -31,7 +31,7 @@ winScripts = () ->
         terminal:
             # exec:   "C:/msys64/usr/bin/mintty.exe -i \"#{slash.resolve "#{__dirname}/../scripts/terminal.ico"}\" -o 'AppLaunchCmd=C:\msys64\mingw64.exe' -o 'AppID=MSYS2.Shell.MINGW64.9' -p 950,0 -t 'fish' --  /usr/bin/sh -lc fish"
             exec:   "C:/msys64/usr/bin/mintty.exe -o 'AppLaunchCmd=C:\msys64\mingw64.exe' -o 'AppID=MSYS2.Shell.MINGW64.9' -p 950,0 -t 'fish' --  /usr/bin/sh -lc fish"
-            img:    slash.resolve "#{__dirname}/../node_modules/wxw/icons/terminal.png"
+            img:    slash.resolve "#{__dirname}/../img/terminal.png"
             foreground: "C:/msys64/usr/bin/mintty.exe"
     scripts
 
