@@ -1,84 +1,98 @@
 path
-    /IDE/
-    Tools/
-    /usr/libexec/
+    /ASUS/
     /bin/
     /Bin/
+    /ClientX64/
     /HDA/
+    /IDE/
+    /LANDesk/
     /rempl/
+    /Symantec/Symantec
+    /usr/libexec/
+    /VcXsrv/
+    anaconda3/Scripts/
+    ASUS/AMDA/
+    Microsoft/OneDrive/
+    Office/root/
+    scoop/shims
+    shared/ClickToRun/
     shared/ink/
+    Tools/
 contains
-    setup
+    authentication
+    cache
+    configuration
+    crash
     inst
-    update
     plugin
     service
-    configuration
-    cache
-    crash
-    authentication
+    setup
+    update
 startsWith
-    qt
-    python
-    compil
-    microsoft.
-    minidump
-    mercurial
-    myprog
-    geforce
     3dvision
-    conemu-
-    clink
-    sign
     ait
-    dotfus
-    tamper
     appcert
-    stree
-    teamviewer_
-    unins
-    unpack
-    islz
-    ii
-    ie
-    jhi
-    nv
-    tv_
+    beservice
+    bss
+    clink
+    compil
+    conemu-
+    config
+    dotfus
+    dp
+    geforce
+    git-
+    gld
     gs
     hlp
-    gld
-    git-
-    bss
-    dp
-    wm
-    x86
-    x64
-    ms
+    hpmclient_
+    ie
+    ii
+    islz
+    jhi
     mc
+    mercurial
+    microsoft.
+    minidump
     mp
-    sm
-    wab
-    sense
-    sql
-    vulkan
-    beservice
-    ocenvst
+    ms
+    myprog
+    ndi
+    nm
+    nv
     ocenaudio_c
+    ocenvst
+    outofprocess
+    python
+    qt
+    rm
+    rtk
+    rtl
+    sense
+    sign
+    sm
+    sql
     steamerr
-    config
+    stree
+    tamper
+    teamviewer_
+    tf
+    tv_
+    unins
+    unpack
     vbox
-    w9x
     vc
     vs
-    tf
-    rm
-    rtl
-    rtk
+    vulkan
+    w9x
+    wab
+    wm
+    x64
+    x86
 matches
     7z
     7zg
-    git
-    hg
+    add_path
     agcp
     amd64
     analyzer
@@ -87,53 +101,70 @@ matches
     browsercore
     builder
     buildtools_full
+    bzip2
+    cccc
+    chocolateygui
     chrome_proxy
     cleanup
-    crashreporter
-    dotnet
-    bzip2
     consoleexecutor
     container
     coregen
+    crashreporter
+    dotnet
     exclusivemodetool
     extexport
+    elevate
+    greenshotocrcommand
     gameoverlayui
-    openssl
-    link
     gen
-    gui
+    gup
     getopt
+    git
+    gui
+    handle
     helper
-    wininfo
-    inkview
-    streaming_client
+    helixmfa
+    hg
     hhc
-    iscc
     imagingdevices
+    inkview
     instool
     intelpttekrecertification
+    iscc
+    link
+    lms
     maintenanceservice
     makeappx
-    lms
-    tsc
     nissrv
     offlinescannershell
+    openssl
+    p4
+    p4_parallel
+    p4admin
+    p4d
+    p4vc
     patch
     pdnrepair
     pingsender
-    slideshow
+    pipanel
+    py
+    pyw
+    repair
     rg
     shellintegration
+    slideshow
     sllauncher
     socketheciserver
     squirrel
+    streaming_client
     supportwizard
+    tsc
     ui
     un_a
     vswhere
     wdnsfltr
-    add_path
+    wininfo
     writeminidump
-    wslbridge
     wsenable
+    wslbridge
     xinputtest
