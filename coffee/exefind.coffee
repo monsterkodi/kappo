@@ -10,7 +10,7 @@
 
 exeFind = (cb) ->
 
-    appl = prefs.get 'apps', []
+    appl = prefs.get 'apps' []
     
     apps = {}
     appl.map (a) -> apps[slash.base a] = slash.resolve a
@@ -21,7 +21,7 @@ exeFind = (cb) ->
     apps['regedit']  = "C:/Windows/regedit.exe"
     apps['explorer'] = "C:/Windows/explorer.exe"
 
-    dirs = _.clone prefs.get 'dirs', []
+    dirs = _.clone prefs.get 'dirs' []
     
     dirs.push "C:/Program Files"
     dirs.push "C:/Program Files (x86)"
@@ -45,27 +45,27 @@ exeFind = (cb) ->
             return true if file.indexOf(path) >= 0
         false
             
-    ignore = prefs.get 'ignore', []
+    ignore = prefs.get 'ignore' []
     foldersLeft = dirs.length
 
     for exeFolder in dirs
         
-        walkOpt = prefs.get 'walk', no_recurse: false, max_depth: 4
+        walkOpt = prefs.get 'walk' no_recurse: false max_depth: 4
         walk = walkdir slash.resolve(exeFolder), walkOpt
 
-        walk.on 'error', (err) -> 
-            post.toWins 'mainlog', "walk error #{err.stack}"
+        walk.on 'error' (err) -> 
+            post.toWins 'mainlog' "walk error #{err.stack}"
             log "[ERROR] findExes -- #{err}"
 
-        walk.on 'end', ->
+        walk.on 'end' ->
 
             foldersLeft -= 1
             if foldersLeft == 0
                 # post.toWins 'mainlog' "apps #{apps}"
-                klog 'apps' apps
+                # klog 'apps' apps
                 cb? apps
 
-        walk.on 'file', (file) ->
+        walk.on 'file' (file) ->
 
             file = slash.resolve file
             if slash.ext(file) == 'exe'
