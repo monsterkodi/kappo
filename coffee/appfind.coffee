@@ -15,6 +15,8 @@ appFind = (cb) ->
     appFolders = [
         "/Applications"
         "/Applications/Utilities"
+        "/System/Applications"
+        "/System/Applications/Utilities"
         "~"
         ]
     appFolders = appFolders.concat prefs.get 'dirs', []
