@@ -6,7 +6,7 @@
 000   000  000        000        000       000  000   000  0000000    
 ###
 
-{ walkdir, prefs, slash, log, _ } = require 'kxk'
+{ walkdir, prefs, slash, last, log, _ } = require 'kxk'
 
 appFind = (cb) ->
 
@@ -32,9 +32,10 @@ appFind = (cb) ->
                 # log "found: #{_.size apps}"
                 cb apps
         walk.on 'directory', (dir) ->
-            if slash.ext(dir) == 'app'
-                name = slash.base dir
-                apps[name] = dir
+            if slash.ext(dir) == 'app' 
+                if not /(Helper$|NP$|EH$)/.test slash.base dir
+                    name = slash.base dir
+                    apps[name] = dir
 
 module.exports = appFind                
             
