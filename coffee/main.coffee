@@ -6,7 +6,7 @@
 000   000  000   000  000  000   000
 ###
 
-{ post, srcmap, walkdir, about, args, childp, prefs, karg, valid, slash, kstr, klog, os, fs, _ } = require 'kxk'
+{ about, app, args, childp, fs, klog, os, osascript, post, prefs, slash, srcmap, valid, win } = require 'kxk'
 
 pkg           = require '../package.json'
 electron      = require 'electron'
@@ -46,11 +46,18 @@ args = args.init """
 
 post.on 'winlog'    (text) -> log ">>> " + text
 post.on 'runScript' (name) -> scripts[name].cb()
+post.on 'hideWin'  -> win?.hide()
 post.on 'cancel'   -> activateApp()
 post.on 'about'    -> showAbout()
 post.on 'findApps' -> findApps()
-
+post.on 'devTools' -> win?.webContents.openDevTools mode:'detach'
 post.onGet 'apps' -> apps: apps, scripts:scripts, allKeys:allKeys
+
+electron.ipcMain.on 'getWinBounds' (e) -> e.returnValue = win?.getBounds()
+electron.ipcMain.on 'getScreenSize' (e) -> e.returnValue = electron.screen.getPrimaryDisplay().workAreaSize
+electron.ipcMain.on 'setWinBounds' (e,b) -> 
+    klog 'setWinBounds' win?, b
+    win?.setBounds b
 
 # 00000000  000  000   000  0000000           0000000   00000000   00000000    0000000  
 # 000       000  0000  000  000   000        000   000  000   000  000   000  000       
@@ -103,18 +110,18 @@ getActiveApp = ->
         if top?.path?
             appName = activeApp = slash.base top.path
     else
-        activeApp = childp.execSync "#{__dirname}/../bin/appswitch -P"
+        activeApp = childp.execSync "#{__dirname}/../bin/appswitch -P" encoding:'utf8'
 
-    log 'getActiveApp', appName, activeApp, win? if args.verbose
+    klog 'getActiveApp appName' appName, '-> activeApp' activeApp #? if args.verbose
         
     if win?
         if appName?
-            log 'getActiveApp currentApp' appName if args.verbose
+            klog 'getActiveApp post.currentApp' appName #if args.verbose
             post.toWins 'currentApp' appName
         else
-            log 'getActiveApp clearSearch' appName if args.verbose
+            klog 'getActiveApp clearSearch' appName #if args.verbose
             post.toWins 'clearSearch'
-        log 'getActiveApp fade' if args.verbose
+        # klog 'getActiveApp fade' if args.verbose
         post.toWins 'fade'
     else
         createWindow()
@@ -138,11 +145,10 @@ activateApp = ->
                 # wxw 'focus' info.path
         win?.hide()
     else
-
         if not activeApp?
             win?.hide()
         else
-            childp.exec "#{__dirname}/../bin/appswitch -fp #{activeApp}", (err) -> win?.hide()
+            childp.exec "#{__dirname}/../bin/appswitch -fp #{activeApp}" (err) -> win?.hide()
 
 #000   000  000  000   000  0000000     0000000   000   000
 #000 0 000  000  0000  000  000   000  000   000  000 0 000
@@ -153,11 +159,11 @@ activateApp = ->
 toggleWindow = ->
     
     if win?.isVisible()
-        if prefs.get 'hideOnDoubleActivation', false
+        if prefs.get 'hideOnDoubleActivation' false
             win.hide()
         else
             post.toWins 'openCurrent'
-            activateApp() if not slash.win()
+            # activateApp() if not slash.win()
     else
         if slash.win()
             if not win?
@@ -174,10 +180,12 @@ toggleWindow = ->
                 do shell script "echo " & n
                 """, type:'AppleScript', (err,name) ->
                     appName = String(name).trim()
+                    klog 'toggleWindow appName' appName
                     if not win?
                         createWindow()
                     else
                         getActiveApp()
+                        win.show()
                         win.focus()
 
 reloadWindow = -> win.webContents.reloadIgnoringCache()
@@ -210,22 +218,26 @@ createWindow = ->
         fullscreen:      false
         show:            false
         webPreferences:
-            nodeIntegration: true
+                webSecurity:             false
+                contextIsolation:        false
+                nodeIntegration:         true
+                nodeIntegrationInWorker: true
 
     bounds = prefs.get 'bounds'
     win.setBounds bounds if bounds?
     win.loadURL "file://#{__dirname}/index.html"
-    win.on 'closed' -> win = null
+    # win.on 'closed' -> win = null
     win.on 'resize' onWinResize
     win.on 'move'   saveBounds
     win.on 'ready-to-show' ->
         getActiveApp()
         if args.debug
-            win.show()
-            win.webContents.openDevTools()
+            win.webContents.openDevTools mode:'detach'
+        win.show()
+        win.focus()
     win
 
-saveBounds = -> if win? then prefs.set 'bounds', win.getBounds()
+saveBounds = -> if win? then prefs.set 'bounds' win.getBounds()
 
 squareTimer = null
 
@@ -242,7 +254,7 @@ onWinResize = (event) ->
 
 showAbout = ->
     
-    if prefs.get('scheme', 'bright') == 'bright'
+    if prefs.get('scheme' 'dark') == 'bright'
         color = '#fff'
         textc = '#ddd'
         highl = '#000'
@@ -277,7 +289,7 @@ app.on 'ready' ->
             app.exit 0
     
     tray = new Tray "#{__dirname}/../img/menu.png"
-    tray.on 'click', toggleWindow
+    tray.on 'click' toggleWindow
     
     if os.platform() != 'darwin'
         tray.setContextMenu Menu.buildFromTemplate [

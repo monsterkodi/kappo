@@ -15,9 +15,7 @@ fuzzaldrin   = require 'fuzzaldrin'
 electron     = require 'electron'
 
 clipboard    = electron.clipboard
-browser      = electron.remote.BrowserWindow
-win          = electron.remote.getCurrentWindow()
-iconDir      = slash.resolve "#{electron.remote.app.getPath('userData')}/icons"
+iconDir      = slash.resolve "#{post.get('userData')}/icons"
 ipc          = electron.ipcRenderer
     
 appHist      = null
@@ -29,8 +27,8 @@ search       = ''
 currentName  = ''
 currentIndex = 0
 
-post.on 'mainlog', (text) -> log ">>> " + text
-post.on 'appsFound', -> { apps, scripts, allKeys } = post.get 'apps'
+post.on 'mainlog' (text) -> log ">>> " + text
+post.on 'appsFound' -> { apps, scripts, allKeys } = post.get 'apps'
 
 # 000   000  000  000   000  00     00   0000000   000  000   000
 # 000 0 000  000  0000  000  000   000  000   000  000  0000  000
@@ -44,30 +42,28 @@ winMain = ->
         srcmap.logErr err
         true
     
-    klog.slog.icon = slash.fileUrl slash.join __dirname, '..', 'img', 'menu@2x.png'
+    klog.slog.icon = slash.fileUrl slash.join __dirname, '..' 'img' 'menu@2x.png'
     
-    window.win = win
-
     post.on 'fade' ->
         
         if not slash.win()
-            win.show()
+            # win.show()
             return
             
-        [x,y] = win.getPosition()     # enable smooth fade on windows:
-        win.setPosition -10000,-10000 # move window offscreen before show
-        win.show()
+        # [x,y] = win.getPosition()     # enable smooth fade on windows:
+        # win.setPosition -10000,-10000 # move window offscreen before show
+        # win.show()
         $('#main').classList.remove 'fade'
         $('#main').style.opacity = 0
         
         restore = -> 
             
-            if x < -10 or y < -10 # key repeat hickup 'fix'
-                b = win.getBounds()
-                x = (screenSize().width - b.width)/2
-                y = 0
-            else
-                win.setPosition x,y
+            # if x < -10 or y < -10 # key repeat hickup 'fix'
+                # b = win.getBounds()
+                # x = (screenSize().width - b.width)/2
+                # y = 0
+            # else
+                # win.setPosition x,y
                 
             $('#main').classList.add 'fade'
             
@@ -78,15 +74,15 @@ winMain = ->
     { apps, scripts, allKeys } = post.get 'apps'
 
     appHist = new history
-        list:      prefs.get 'history', []
-        maxLength: prefs.get 'maxHistoryLength', 10
+        list:      prefs.get 'history' []
+        maxLength: prefs.get 'maxHistoryLength' 10
 
-    scheme.set prefs.get 'scheme', 'bright'
+    scheme.set prefs.get 'scheme' 'bright'
     
 winHide = -> 
-    
+
     if not args.debug
-        win.hide()
+        post.toMain 'hideWin'
     
 #  0000000   00000000   00000000  000   000
 # 000   000  000   000  000       0000  000
@@ -99,7 +95,7 @@ openCurrent = ->
     ipc.send 'closeAbout'
     
     if currentIndex > 0 and search.length
-        prefs.set "search:#{search}:#{currentName}", 1 + prefs.get "search:#{search}:#{currentName}", 0
+        prefs.set "search:#{search}:#{currentName}", 1 + prefs.get "search:#{search}:#{currentName}" 0
 
     if currentIsApp()
 
@@ -113,7 +109,8 @@ openCurrent = ->
             winHide()
 
         else
-            childp.exec "open -a \"#{apps[currentName]}\"", (err) ->
+            klog 'openCurrent' currentName
+            childp.exec "open -a \"#{apps[currentName]}\"" (err) ->
                 if err? then log "[ERROR] can't open #{apps[currentName]} #{err}"
                 
     else if scripts[currentName]?
@@ -139,10 +136,10 @@ openCurrent = ->
                 if err? then log "[ERROR] can't execute script #{scripts[currentName]}: #{err}"
                 
         else
-            post.toMain 'runScript', currentName
+            post.toMain 'runScript' currentName
             winHide()
 
-post.on 'openCurrent',  openCurrent
+post.on 'openCurrent'  openCurrent
 
 #  0000000  000   000  00000000   00000000   00000000  000   000  000000000
 # 000       000   000  000   000  000   000  000       0000  000     000
@@ -157,10 +154,11 @@ currentApp = (appName) ->
     lastMatches   = currentName.toLowerCase() == appName.toLowerCase()
     scriptMatches = scripts[currentName]?.foreground? and slash.base(scripts[currentName].foreground).toLowerCase() == appName.toLowerCase()
         
-    if (lastMatches or scriptMatches) and appHist.previous() and prefs.get 'appToggle', true
+    if (lastMatches or scriptMatches) and appHist.previous() and prefs.get 'appToggle' true
         listHistory 1
         search = ''
     else
+        klog "currentApp #{appName} -> #{currentName}" lastMatches, scriptMatches
         name = currentName
         doSearch ''
         selectName name if not empty name
@@ -169,7 +167,7 @@ currentApp = (appName) ->
         
     $('#main').classList.add 'fade'
 
-post.on 'currentApp', currentApp
+post.on 'currentApp' currentApp
 
 currentIsApp = => not currentIsScript()
 currentIsScript = -> results[currentIndex]?.script?
@@ -182,7 +180,7 @@ currentIsScript = -> results[currentIndex]?.script?
 
 toggleAppToggle = ->
     
-    prefs.set 'appToggle', not prefs.get 'appToggle', true
+    prefs.set 'appToggle' not prefs.get 'appToggle' true
     
 toggleDoubleActivation = ->
 
@@ -195,7 +193,7 @@ toggleDoubleActivation = ->
 # 000   000  000  0000000      000      0000000   000   000     000
 
 listHistory = (offset=0) ->
-    
+    klog "listHistory #{offset}" appHist.list
     results = []
     if valid appHist
         for h in appHist.list
@@ -203,6 +201,7 @@ listHistory = (offset=0) ->
             result.string ?= result.name
             results.push result
     index = results.length - 1 - offset
+    klog "listHistory index #{index}" results
     select index
     showDots()
 
@@ -213,7 +212,7 @@ addToHistory = ->
     result = _.clone results[currentIndex]
     delete result.string
     appHist.add result
-    prefs.set 'history', appHist.list
+    prefs.set 'history' appHist.list
     
 openInFinder = () ->
     
@@ -241,7 +240,7 @@ clearSearch = ->
     else
         doSearch ''
 
-post.on 'clearSearch',  clearSearch
+post.on 'clearSearch'  clearSearch
 
 # 000   0000000   0000000   000   000
 # 000  000       000   000  0000  000
@@ -306,7 +305,7 @@ showDots = ->
     dots.innerHTML = ''
 
     winWidth = sw()
-    setStyle '#appname', 'font-size', "#{parseInt 10+2*(winWidth-100)/100}px"
+    setStyle '#appname' 'font-size' "#{parseInt 10+2*(winWidth-100)/100}px"
 
     return if results.length < 2
 
@@ -424,7 +423,8 @@ window.onwheel  = (event) ->
 #      000  000   000     000
 # 0000000   000  0000000  00000000
 
-screenSize = -> electron.remote.screen.getPrimaryDisplay().workAreaSize
+openDevTools = -> post.toMain 'devTools'
+screenSize = -> ss = electron.ipcRenderer.sendSync 'getScreenSize'; klog 'screenSize' ss; ss
 
 clampBounds = (b) ->
     b.width = clamp 200, 600, b.width
@@ -433,26 +433,29 @@ clampBounds = (b) ->
     b.y = clamp 0, screenSize().height - b.height, b.y
     b
 
+getBounds =     -> b = electron.ipcRenderer.sendSync 'getWinBounds'; klog 'getBounds' b; b
+setBounds = (b) -> electron.ipcRenderer.send 'setWinBounds' b; klog 'setBounds' b
+    
 sizeWindow = (d) ->
-    b = win.getBounds()
+    b = getBounds()
     cx = b.x + b.width/2
     b.width+=d
     b.height+=d
     clampBounds b
     b.x = cx - b.width/2
-    win.setBounds clampBounds b
+    setBounds clampBounds b
 
 moveWindow = (dx,dy) ->
-    b = win.getBounds()
+    b = getBounds()
     b.x+=dx
     b.y+=dy
-    win.setBounds clampBounds b
+    setBounds clampBounds b
 
 biggerWindow     = -> sizeWindow 50
 smallerWindow    = -> sizeWindow -50
-minimizeWindow   = -> win.setBounds x:screenSize().width/2-100, y:0, width:200, height:200
-maximizeWindow   = -> win.setBounds x:screenSize().width/2-300, y:0, width:600, height:600
-toggleWindowSize = -> if win.getBounds().width > 200 then minimizeWindow() else maximizeWindow()
+minimizeWindow   = -> setBounds x:screenSize().width/2-100, y:0, width:200, height:200
+maximizeWindow   = -> setBounds x:screenSize().width/2-300, y:0, width:600, height:600
+toggleWindowSize = -> if getBounds().width > 200 then minimizeWindow() else maximizeWindow()
 
 preventKeyRepeat = -> log 'keyRepeat ahead!'
 
@@ -466,7 +469,7 @@ document.onkeydown = (event) ->
 
     { mod, key, combo, char } = keyinfo.forEvent event
 
-    log combo if args.verbose
+    klog combo #if args.verbose
     
     if char? and combo.length == 1
         complete key
@@ -482,7 +485,7 @@ document.onkeydown = (event) ->
         when 'down', 'right'                                then select currentIndex+1
         when 'up'  , 'left'                                 then select currentIndex-1
         when 'enter'                                        then openCurrent()
-        when 'command+alt+i',           'ctrl+alt+i'        then args.debug = true; win.webContents.openDevTools()
+        when 'command+alt+i',           'ctrl+alt+i'        then openDevTools()
         when 'command+=',               'ctrl+='            then biggerWindow()
         when 'command+-',               'ctrl+-'            then smallerWindow()
         when 'command+r',               'ctrl+r'            then post.toMain 'findApps'
